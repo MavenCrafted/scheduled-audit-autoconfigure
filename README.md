@@ -1,35 +1,32 @@
 # Spring Scheduled Audit
 
-`spring-scheduled-audit` is a lightweight library for auditing the execution of Spring `@Scheduled` jobs.
+`spring-scheduled-audit` is a Spring Boot library for auditing the execution of `@Scheduled` jobs.
 
-It provides a consistent way to capture job lifecycle events such as start, success, failure, and duration, while allowing audit storage to be implemented through extensible backends such as logging or database persistence.
+It is designed to capture scheduled job lifecycle events such as start, completion, failure, and duration, with support for audit backends implemented through logging or persistence.
+
+## Installation
+
+To use the library, add `spring-scheduled-audit` together with `spring-boot-starter-aop`:
+
+```xml
+<dependency>
+    <groupId>io.github.mavencrafted</groupId>
+    <artifactId>spring-scheduled-audit</artifactId>
+    <version>1.0.0</version>
+</dependency>
+
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-aop</artifactId>
+</dependency>
+```
+
+`spring-scheduled-audit` is enabled automatically when it is present in a Spring Boot application. Existing `@Scheduled` methods are picked up without additional setup, and debug logging can be used to observe scheduled job audit activity.
 
 ## Repository Maintenance
 
-This repository is maintained with explicit branch and commit conventions to keep history predictable and traceable.
+This repository is maintained with consistent branch and commit conventions:
 
-### Branch Names
-
-Format:
-
-`<type>/<scope>-<description>`
-
-Examples:
-
-- `chore/pom-project-structure`
-- `docs/readme-maintenance-guidelines`
-
-### Commit Messages
-
-Format:
-
-`type(scope): description`
-
-Examples:
-
-- `chore(pom): initialize base POM with metadata, scm, and compiler setup`
-- `docs(readme): refine repository maintenance section`
-
-### Supported Types
-
-`feat`, `fix`, `chore`, `refactor`, `docs`, `test`
+- Branch format: `<type>/<scope>-<description>`
+- Commit format: `type(scope): description`
+- Supported types: `feat`, `fix`, `chore`, `refactor`, `docs`, `test`
