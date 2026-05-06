@@ -23,6 +23,19 @@ To use the library, add `scheduled-audit-autoconfigure` together with `spring-bo
 
 `scheduled-audit-autoconfigure` is enabled automatically when it is present in a Spring Boot application. Existing `@Scheduled` methods are picked up without additional setup, and debug logging can be used to observe scheduled job audit activity.
 
+Custom audit backends can be added by declaring one or more `ScheduledAuditListener` beans:
+
+```java
+@Bean
+ScheduledAuditListener databaseScheduledAuditListener() {
+    return event -> {
+        // persist the audit event
+    };
+}
+```
+
+When multiple listeners are present, each listener receives every scheduled audit event. If one listener fails, the remaining listeners are still invoked and the scheduled job execution is not interrupted.
+
 ## Repository Maintenance
 
 This repository is maintained with consistent branch and commit conventions:
