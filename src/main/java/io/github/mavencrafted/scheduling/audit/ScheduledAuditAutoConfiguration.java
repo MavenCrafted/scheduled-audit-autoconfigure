@@ -1,4 +1,4 @@
-package io.github.mavencrafted;
+package io.github.mavencrafted.scheduling.audit;
 
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
