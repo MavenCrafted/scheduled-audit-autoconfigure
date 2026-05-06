@@ -14,6 +14,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 public final class ScheduledAuditAutoConfiguration {
 
     @Bean
+    @ConditionalOnMissingBean(ScheduledAuditAspect.class)
     public ScheduledAuditAspect scheduledAuditAspect(ScheduledAuditListener listener) {
         return new ScheduledAuditAspect(listener);
     }
