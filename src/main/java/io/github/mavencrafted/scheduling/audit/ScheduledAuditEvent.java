@@ -1,5 +1,6 @@
 package io.github.mavencrafted.scheduling.audit;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
@@ -116,6 +117,18 @@ public final class ScheduledAuditEvent {
      */
     public Instant getFinishedAt() {
         return finishedAt;
+    }
+
+    /**
+     * Returns the execution duration.
+     *
+     * @return the execution duration, or {@code null} when the execution has not completed
+     */
+    public Duration getDuration() {
+        if (this.finishedAt == null) {
+            return null;
+        }
+        return Duration.between(this.startedAt, this.finishedAt);
     }
 
     /**

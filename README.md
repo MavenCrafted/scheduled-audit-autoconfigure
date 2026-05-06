@@ -34,7 +34,18 @@ ScheduledAuditListener databaseScheduledAuditListener() {
 }
 ```
 
-When multiple listeners are present, each listener receives every scheduled audit event. If one listener fails, the remaining listeners are still invoked and the scheduled job execution is not interrupted.
+When multiple listeners are present, each listener receives every scheduled audit event. The default logging listener remains enabled unless `scheduled-audit.logging.enabled=false` is configured. If one listener fails, the remaining listeners are still invoked and the scheduled job execution is not interrupted.
+
+```yaml
+scheduled-audit:
+  enabled: true
+  logging:
+    enabled: true
+
+logging:
+  level:
+    io.github.mavencrafted: DEBUG
+```
 
 ## Repository Maintenance
 

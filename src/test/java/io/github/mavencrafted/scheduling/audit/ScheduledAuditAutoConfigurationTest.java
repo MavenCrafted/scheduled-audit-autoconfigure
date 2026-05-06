@@ -30,12 +30,16 @@ class ScheduledAuditAutoConfigurationTest {
     }
 
     @Test
-    void contextBacksOffDefaultListenerWhenCustomListenerIsPresent() {
-        contextRunner.withBean(ScheduledAuditListener.class, () -> event -> { })
-                .run(context ->
-                        assertThat(context).hasSingleBean(ScheduledAuditListener.class)
-                                .doesNotHaveBean(LoggingScheduledAuditListener.class)
-                );
+    void contextAddsCustomListenerAlongsideDefaultLoggingListener() {
+        contextRunner.withBean("customListener", ScheduledAuditListener.class, () -> event -> { })
+                .run(context -> {
+                    assertThat(context).hasNotFailed()
+                            .hasSingleBean(ScheduledAuditAspect.class)
+                            .hasSingleBean(LoggingScheduledAuditListener.class);
+                    assertThat(context.getBeansOfType(ScheduledAuditListener.class))
+                            .containsKeys("customListener", "loggingScheduledAuditListener")
+                            .hasSize(2);
+                });
     }
 
     @Test
@@ -45,9 +49,10 @@ class ScheduledAuditAutoConfigurationTest {
                 .run(context -> {
                     assertThat(context).hasNotFailed()
                             .hasSingleBean(ScheduledAuditAspect.class)
-                            .doesNotHaveBean(LoggingScheduledAuditListener.class);
+                            .hasSingleBean(LoggingScheduledAuditListener.class);
                     assertThat(context.getBeansOfType(ScheduledAuditListener.class))
-                            .containsOnlyKeys("firstListener", "secondListener");
+                            .containsKeys("firstListener", "secondListener", "loggingScheduledAuditListener")
+                            .hasSize(3);
                 });
     }
 
@@ -58,5 +63,16 @@ class ScheduledAuditAutoConfigurationTest {
                         assertThat(context).doesNotHaveBean(ScheduledAuditAspect.class)
                                 .doesNotHaveBean(ScheduledAuditListener.class)
                 );
+    }
+
+    @Test
+    void contextCanDisableDefaultLoggingListener() {
+        contextRunner.withPropertyValues("scheduled-audit.logging.enabled=false")
+                .run(context -> {
+                    assertThat(context).hasNotFailed()
+                            .hasSingleBean(ScheduledAuditAspect.class)
+                            .doesNotHaveBean(LoggingScheduledAuditListener.class);
+                    assertThat(context.getBeansOfType(ScheduledAuditListener.class)).isEmpty();
+                });
     }
 }

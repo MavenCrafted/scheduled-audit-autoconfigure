@@ -1,5 +1,6 @@
 package io.github.mavencrafted.scheduling.audit;
 
+import java.time.Duration;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -22,6 +23,7 @@ class ScheduledAuditEventTest {
         assertThat(event.getStatus()).isEqualTo(ScheduledAuditEvent.Status.STARTED);
         assertThat(event.getStartedAt()).isEqualTo(startedAt);
         assertThat(event.getFinishedAt()).isNull();
+        assertThat(event.getDuration()).isNull();
         assertThat(event.getFailure()).isNull();
     }
 
@@ -42,6 +44,7 @@ class ScheduledAuditEventTest {
 
         assertThat(event.getStatus()).isEqualTo(ScheduledAuditEvent.Status.FAILED);
         assertThat(event.getFinishedAt()).isEqualTo(finishedAt);
+        assertThat(event.getDuration()).isEqualTo(Duration.ofSeconds(1));
         assertThat(event.getFailure()).isSameAs(failure);
     }
 

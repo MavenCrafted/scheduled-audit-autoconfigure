@@ -31,12 +31,19 @@ public final class ScheduledAuditAutoConfiguration {
     }
 
     /**
-     * Registers the default logging listener when no custom listener is present.
+     * Registers the default logging listener when logging is enabled and no explicit
+     * logging listener bean is present.
      *
      * @return the default logging listener
      */
     @Bean
-    @ConditionalOnMissingBean(ScheduledAuditListener.class)
+    @ConditionalOnMissingBean(LoggingScheduledAuditListener.class)
+    @ConditionalOnProperty(
+            prefix = "scheduled-audit.logging",
+            name = "enabled",
+            havingValue = "true",
+            matchIfMissing = true
+    )
     public LoggingScheduledAuditListener loggingScheduledAuditListener() {
         return new LoggingScheduledAuditListener();
     }
