@@ -12,6 +12,7 @@ import org.springframework.util.ClassUtils;
 
 import java.lang.reflect.Method;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Aspect
@@ -19,10 +20,10 @@ public class ScheduledAuditAspect {
 
     private static final Log logger = LogFactory.getLog(ScheduledAuditAspect.class);
 
-    private final ScheduledAuditListener scheduledAuditListener;
+    private final List<ScheduledAuditListener> scheduledAuditListeners;
 
-    public ScheduledAuditAspect(ScheduledAuditListener scheduledAuditListener) {
-        this.scheduledAuditListener = scheduledAuditListener;
+    public ScheduledAuditAspect(List<ScheduledAuditListener> scheduledAuditListeners) {
+        this.scheduledAuditListeners = List.copyOf(scheduledAuditListeners);
     }
 
     @Around("@annotation(scheduled)")
@@ -30,22 +31,24 @@ public class ScheduledAuditAspect {
         UUID executionId = UUID.randomUUID();
         Instant startedAt = Instant.now();
         String taskName = resolveTaskName(joinPoint);
-        invokeListenerSafely(scheduledAuditListener, ScheduledAuditEvent.started(executionId, taskName, startedAt));
+        invokeListenersSafely(ScheduledAuditEvent.started(executionId, taskName, startedAt));
         try {
             Object result = joinPoint.proceed();
-            invokeListenerSafely(scheduledAuditListener, ScheduledAuditEvent.succeeded(executionId, taskName, startedAt, Instant.now()));
+            invokeListenersSafely(ScheduledAuditEvent.succeeded(executionId, taskName, startedAt, Instant.now()));
             return result;
         } catch (Throwable throwable) {
-            invokeListenerSafely(scheduledAuditListener, ScheduledAuditEvent.failed(executionId, taskName, startedAt, Instant.now(), throwable));
+            invokeListenersSafely(ScheduledAuditEvent.failed(executionId, taskName, startedAt, Instant.now(), throwable));
             throw throwable;
         }
     }
 
-    private void invokeListenerSafely(ScheduledAuditListener listener, ScheduledAuditEvent event) {
-        try {
-            listener.onEvent(event);
-        } catch (RuntimeException ex) {
-            logger.warn("Scheduled audit listener failed", ex);
+    private void invokeListenersSafely(ScheduledAuditEvent event) {
+        for (ScheduledAuditListener listener : scheduledAuditListeners) {
+            try {
+                listener.onEvent(event);
+            } catch (RuntimeException ex) {
+                logger.warn("Scheduled audit listener failed: " + listener.getClass().getName(), ex);
+            }
         }
     }
 

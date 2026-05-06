@@ -39,6 +39,19 @@ class ScheduledAuditAutoConfigurationTest {
     }
 
     @Test
+    void contextSupportsMultipleCustomListeners() {
+        contextRunner.withBean("firstListener", ScheduledAuditListener.class, () -> event -> { })
+                .withBean("secondListener", ScheduledAuditListener.class, () -> event -> { })
+                .run(context -> {
+                    assertThat(context).hasNotFailed()
+                            .hasSingleBean(ScheduledAuditAspect.class)
+                            .doesNotHaveBean(LoggingScheduledAuditListener.class);
+                    assertThat(context.getBeansOfType(ScheduledAuditListener.class))
+                            .containsOnlyKeys("firstListener", "secondListener");
+                });
+    }
+
+    @Test
     void contextDoesNotLoadWhenEnabledPropertyIsFalse() {
         contextRunner.withPropertyValues("scheduled-audit.enabled=false")
                 .run(context ->

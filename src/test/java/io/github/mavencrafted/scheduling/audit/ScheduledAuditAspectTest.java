@@ -19,7 +19,7 @@ class ScheduledAuditAspectTest {
     @Test
     void publishesStartedAndSucceededEvents() throws Throwable {
         List<ScheduledAuditEvent> events = new ArrayList<>();
-        ScheduledAuditAspect aspect = new ScheduledAuditAspect(events::add);
+        ScheduledAuditAspect aspect = new ScheduledAuditAspect(List.of(events::add));
         Method method = scheduledMethod();
 
         Object result = aspect.audit(joinPoint(method, "done"), scheduled(method));
@@ -37,7 +37,7 @@ class ScheduledAuditAspectTest {
     @Test
     void publishesFailedEvent() throws Throwable {
         List<ScheduledAuditEvent> events = new ArrayList<>();
-        ScheduledAuditAspect aspect = new ScheduledAuditAspect(events::add);
+        ScheduledAuditAspect aspect = new ScheduledAuditAspect(List.of(events::add));
         Method method = scheduledMethod();
         IllegalStateException failure = new IllegalStateException("boom");
 
@@ -53,14 +53,52 @@ class ScheduledAuditAspectTest {
 
     @Test
     void ignoresListenerFailure() throws Throwable {
-        ScheduledAuditAspect aspect = new ScheduledAuditAspect(event -> {
+        ScheduledAuditAspect aspect = new ScheduledAuditAspect(List.of(event -> {
             throw new IllegalStateException("listener failed");
-        });
+        }));
         Method method = scheduledMethod();
 
         Object result = aspect.audit(joinPoint(method, "done"), scheduled(method));
 
         assertThat(result).isEqualTo("done");
+    }
+
+    @Test
+    void publishesEventsToAllListeners() throws Throwable {
+        List<ScheduledAuditEvent> firstEvents = new ArrayList<>();
+        List<ScheduledAuditEvent> secondEvents = new ArrayList<>();
+        List<ScheduledAuditListener> listeners = List.of(firstEvents::add, secondEvents::add);
+        ScheduledAuditAspect aspect = new ScheduledAuditAspect(listeners);
+        Method method = scheduledMethod();
+
+        Object result = aspect.audit(joinPoint(method, "done"), scheduled(method));
+
+        assertThat(result).isEqualTo("done");
+        assertThat(firstEvents)
+                .extracting(ScheduledAuditEvent::getStatus)
+                .containsExactly(ScheduledAuditEvent.Status.STARTED, ScheduledAuditEvent.Status.SUCCEEDED);
+        assertThat(secondEvents)
+                .extracting(ScheduledAuditEvent::getStatus)
+                .containsExactly(ScheduledAuditEvent.Status.STARTED, ScheduledAuditEvent.Status.SUCCEEDED);
+        assertThat(firstEvents.get(0).getExecutionId()).isEqualTo(secondEvents.get(0).getExecutionId());
+        assertThat(firstEvents.get(1).getExecutionId()).isEqualTo(secondEvents.get(1).getExecutionId());
+    }
+
+    @Test
+    void listenerFailureDoesNotPreventOtherListeners() throws Throwable {
+        List<ScheduledAuditEvent> events = new ArrayList<>();
+        ScheduledAuditListener failingListener = event -> {
+            throw new IllegalStateException("listener failed");
+        };
+        ScheduledAuditAspect aspect = new ScheduledAuditAspect(List.of(failingListener, events::add));
+        Method method = scheduledMethod();
+
+        Object result = aspect.audit(joinPoint(method, "done"), scheduled(method));
+
+        assertThat(result).isEqualTo("done");
+        assertThat(events)
+                .extracting(ScheduledAuditEvent::getStatus)
+                .containsExactly(ScheduledAuditEvent.Status.STARTED, ScheduledAuditEvent.Status.SUCCEEDED);
     }
 
     private ProceedingJoinPoint joinPoint(Method method, Object result) throws Throwable {
