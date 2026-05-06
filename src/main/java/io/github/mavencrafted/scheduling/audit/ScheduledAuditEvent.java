@@ -82,9 +82,13 @@ public final class ScheduledAuditEvent {
     public UUID getExecutionId() {
         return executionId;
     }
-
+    
     /**
      * Returns the scheduled task name.
+     *
+     * <p>The value uses the fully qualified method name of the intercepted
+     * {@code @Scheduled} method, for example
+     * {@code io.github.example.AccountCleanupJob.run}.
      *
      * @return the task name
      */
