@@ -1,4 +1,4 @@
-package io.github.mavencrafted;
+package io.github.mavencrafted.scheduling.audit;
 
 import java.time.Instant;
 import java.util.UUID;

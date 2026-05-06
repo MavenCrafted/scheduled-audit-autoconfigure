@@ -1,4 +1,4 @@
-package io.github.mavencrafted;
+package io.github.mavencrafted.scheduling.audit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

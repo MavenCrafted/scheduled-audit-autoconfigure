@@ -1,4 +1,4 @@
-package io.github.mavencrafted;
+package io.github.mavencrafted.scheduling.audit;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
