@@ -63,6 +63,19 @@ class ScheduledAuditEventTest {
     }
 
     @Test
+    void checksWhetherTagIsPresent() {
+        ScheduledAuditEvent event = ScheduledAuditEvent.started(
+                UUID.randomUUID(),
+                "testTask",
+                Set.of("billing", "noisy"),
+                Instant.now()
+        );
+
+        assertThat(event.hasTag("billing")).isTrue();
+        assertThat(event.hasTag("ops")).isFalse();
+    }
+
+    @Test
     void rejectsNullExecutionId() {
         assertThatThrownBy(() -> ScheduledAuditEvent.started(null, "testTask", Instant.now()))
                 .isInstanceOf(NullPointerException.class)

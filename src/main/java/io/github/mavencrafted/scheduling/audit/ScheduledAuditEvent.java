@@ -166,6 +166,16 @@ public final class ScheduledAuditEvent {
     }
 
     /**
+     * Returns whether the scheduled task declares the given tag.
+     *
+     * @param tag the tag to check
+     * @return {@code true} when the tag is present
+     */
+    public boolean hasTag(String tag) {
+        return this.tags.contains(tag);
+    }
+
+    /**
      * Returns the execution status.
      *
      * @return the execution status
