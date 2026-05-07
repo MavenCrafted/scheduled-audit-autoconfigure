@@ -20,7 +20,7 @@ class ScheduledAuditEventTest {
         ScheduledAuditEvent event = ScheduledAuditEvent.started(executionId, "testTask", startedAt);
 
         assertThat(event.getExecutionId()).isEqualTo(executionId);
-        assertThat(event.getTaskName()).isEqualTo("testTask");
+        assertThat(event.getScheduledMethod()).isEqualTo("testTask");
         assertThat(event.getTags()).isEmpty();
         assertThat(event.getStatus()).isEqualTo(ScheduledAuditEvent.Status.STARTED);
         assertThat(event.getStartedAt()).isEqualTo(startedAt);

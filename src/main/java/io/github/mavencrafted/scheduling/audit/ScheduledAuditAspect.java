@@ -54,12 +54,12 @@ public class ScheduledAuditAspect {
         Instant startedAt = Instant.now();
         Method method = resolveScheduledMethod(joinPoint);
         ScheduledAuditDescriptor descriptor = resolveDescriptor(method);
-        invokeListenersSafely(ScheduledAuditEvent.started(executionId, descriptor.taskName(), descriptor.tags(), startedAt));
+        invokeListenersSafely(ScheduledAuditEvent.started(executionId, descriptor.scheduledMethod(), descriptor.tags(), startedAt));
         try {
             Object result = joinPoint.proceed();
             invokeListenersSafely(ScheduledAuditEvent.succeeded(
                     executionId,
-                    descriptor.taskName(),
+                    descriptor.scheduledMethod(),
                     descriptor.tags(),
                     startedAt,
                     Instant.now()
@@ -69,7 +69,7 @@ public class ScheduledAuditAspect {
         catch (Throwable throwable) {
             invokeListenersSafely(ScheduledAuditEvent.failed(
                     executionId,
-                    descriptor.taskName(),
+                    descriptor.scheduledMethod(),
                     descriptor.tags(),
                     startedAt,
                     Instant.now(),
@@ -102,13 +102,13 @@ public class ScheduledAuditAspect {
     }
 
     private ScheduledAuditDescriptor extractDescriptor(Method method) {
-        String taskName = ClassUtils.getQualifiedMethodName(method, method.getDeclaringClass());
+        String scheduledMethod = ClassUtils.getQualifiedMethodName(method, method.getDeclaringClass());
         try {
-            return new ScheduledAuditDescriptor(taskName, resolveTags(method));
+            return new ScheduledAuditDescriptor(scheduledMethod, resolveTags(method));
         }
         catch (RuntimeException ex) {
-            logger.warn("Failed to resolve ScheduledAudit metadata for task: " + taskName, ex);
-            return new ScheduledAuditDescriptor(taskName, Set.of());
+            logger.warn("Failed to resolve ScheduledAudit metadata for scheduled method: " + scheduledMethod, ex);
+            return new ScheduledAuditDescriptor(scheduledMethod, Set.of());
         }
     }
 
@@ -138,6 +138,6 @@ public class ScheduledAuditAspect {
         return normalizedTags.isEmpty() ? Set.of() : Set.copyOf(normalizedTags);
     }
 
-    private record ScheduledAuditDescriptor(String taskName, Set<String> tags) {
+    private record ScheduledAuditDescriptor(String scheduledMethod, Set<String> tags) {
     }
 }

@@ -29,7 +29,7 @@ class ScheduledAuditAspectTest {
         assertThat(events.get(0).getStatus()).isEqualTo(ScheduledAuditEvent.Status.STARTED);
         assertThat(events.get(1).getStatus()).isEqualTo(ScheduledAuditEvent.Status.SUCCEEDED);
         assertThat(events.get(0).getExecutionId()).isEqualTo(events.get(1).getExecutionId());
-        assertThat(events.get(0).getTaskName()).contains("SampleScheduledBean").endsWith(".run");
+        assertThat(events.get(0).getScheduledMethod()).contains("SampleScheduledBean").endsWith(".run");
         assertThat(events.get(0).getTags()).containsExactlyInAnyOrder("billing", "noisy");
         assertThat(events.get(1).getTags()).containsExactlyInAnyOrder("billing", "noisy");
         assertThat(events.get(1).getFinishedAt()).isNotNull();

@@ -37,7 +37,7 @@ class ScheduledAuditIntegrationTest {
                 .extracting(ScheduledAuditEvent::getStatus)
                 .containsExactly(ScheduledAuditEvent.Status.STARTED, ScheduledAuditEvent.Status.SUCCEEDED);
         assertThat(started.getExecutionId()).isEqualTo(succeeded.getExecutionId());
-        assertThat(started.getTaskName())
+        assertThat(started.getScheduledMethod())
                 .isEqualTo("io.github.mavencrafted.scheduling.audit.ScheduledAuditIntegrationTest$SampleScheduledBean.run");
         assertThat(started.getTags()).containsExactlyInAnyOrder("billing", "noisy");
         assertThat(succeeded.getTags()).containsExactlyInAnyOrder("billing", "noisy");

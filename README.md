@@ -54,13 +54,13 @@ logging:
 With this configuration, the default logging listener writes `STARTED` and `SUCCEEDED` events at `DEBUG` level and `FAILED` events at `ERROR` level:
 
 ```text
-Scheduled task started [executionId=8f8df9b2-c84c-4a54-a6a4-7cd0f9c0f6ee, taskName=io.github.example.AccountCleanupJob.run, startedAt=2026-05-06T19:22:00.012974Z]
-Scheduled task succeeded [executionId=8f8df9b2-c84c-4a54-a6a4-7cd0f9c0f6ee, taskName=io.github.example.AccountCleanupJob.run, startedAt=2026-05-06T19:22:00.012974Z, finishedAt=2026-05-06T19:22:10.017384Z, duration=PT10.00441S]
-Scheduled task failed [executionId=3fceebec-f3f9-4acb-bcb7-dc78ac4c8b8b, taskName=io.github.example.AccountCleanupJob.run, startedAt=2026-05-06T19:22:30.028913Z, finishedAt=2026-05-06T19:22:40.037654Z, duration=PT10.008741S]
+Scheduled task started [executionId=8f8df9b2-c84c-4a54-a6a4-7cd0f9c0f6ee, scheduledMethod=io.github.example.AccountCleanupJob.run, startedAt=2026-05-06T19:22:00.012974Z]
+Scheduled task succeeded [executionId=8f8df9b2-c84c-4a54-a6a4-7cd0f9c0f6ee, scheduledMethod=io.github.example.AccountCleanupJob.run, startedAt=2026-05-06T19:22:00.012974Z, finishedAt=2026-05-06T19:22:10.017384Z, duration=PT10.00441S]
+Scheduled task failed [executionId=3fceebec-f3f9-4acb-bcb7-dc78ac4c8b8b, scheduledMethod=io.github.example.AccountCleanupJob.run, startedAt=2026-05-06T19:22:30.028913Z, finishedAt=2026-05-06T19:22:40.037654Z, duration=PT10.008741S]
 java.lang.IllegalStateException: Scheduled task failed
 ```
 
-The emitted `taskName` uses the fully qualified scheduled method name, for example `io.github.example.AccountCleanupJob.run`.
+The emitted `scheduledMethod` uses the fully qualified scheduled method name, for example `io.github.example.AccountCleanupJob.run`.
 
 ## Repository Maintenance
 
