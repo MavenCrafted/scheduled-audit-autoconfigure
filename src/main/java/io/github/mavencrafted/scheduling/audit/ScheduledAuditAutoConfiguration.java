@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -14,6 +15,7 @@ import java.util.List;
  * Auto-configuration for scheduled audit support.
  */
 @AutoConfiguration
+@EnableConfigurationProperties(ScheduledAuditProperties.class)
 @ConditionalOnClass({ Scheduled.class, Aspect.class })
 @ConditionalOnProperty(prefix = "scheduled-audit", name = "enabled", havingValue = "true", matchIfMissing = true)
 public final class ScheduledAuditAutoConfiguration {
@@ -34,6 +36,7 @@ public final class ScheduledAuditAutoConfiguration {
      * Registers the default logging listener when logging is enabled and no explicit
      * logging listener bean is present.
      *
+     * @param scheduledAuditProperties the scheduled audit configuration properties
      * @return the default logging listener
      */
     @Bean
@@ -44,7 +47,7 @@ public final class ScheduledAuditAutoConfiguration {
             havingValue = "true",
             matchIfMissing = true
     )
-    public LoggingScheduledAuditListener loggingScheduledAuditListener() {
-        return new LoggingScheduledAuditListener();
+    public LoggingScheduledAuditListener loggingScheduledAuditListener(ScheduledAuditProperties scheduledAuditProperties) {
+        return new LoggingScheduledAuditListener(scheduledAuditProperties.getLogging());
     }
 }
