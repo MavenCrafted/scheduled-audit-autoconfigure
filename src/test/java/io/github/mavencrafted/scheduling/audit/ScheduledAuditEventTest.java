@@ -17,7 +17,12 @@ class ScheduledAuditEventTest {
         UUID executionId = UUID.randomUUID();
         Instant startedAt = Instant.now();
 
-        ScheduledAuditEvent event = ScheduledAuditEvent.started(executionId, "testTask", startedAt);
+        ScheduledAuditEvent event = ScheduledAuditEvent.builder()
+                .executionId(executionId)
+                .scheduledMethod("testTask")
+                .status(ScheduledAuditEvent.Status.STARTED)
+                .startedAt(startedAt)
+                .build();
 
         assertThat(event.getExecutionId()).isEqualTo(executionId);
         assertThat(event.getScheduledMethod()).isEqualTo("testTask");
@@ -36,13 +41,14 @@ class ScheduledAuditEventTest {
         Instant finishedAt = startedAt.plusSeconds(1);
         IllegalStateException failure = new IllegalStateException("boom");
 
-        ScheduledAuditEvent event = ScheduledAuditEvent.failed(
-                executionId,
-                "testTask",
-                startedAt,
-                finishedAt,
-                failure
-        );
+        ScheduledAuditEvent event = ScheduledAuditEvent.builder()
+                .executionId(executionId)
+                .scheduledMethod("testTask")
+                .status(ScheduledAuditEvent.Status.FAILED)
+                .startedAt(startedAt)
+                .finishedAt(finishedAt)
+                .failure(failure)
+                .build();
 
         assertThat(event.getStatus()).isEqualTo(ScheduledAuditEvent.Status.FAILED);
         assertThat(event.getFinishedAt()).isEqualTo(finishedAt);
@@ -52,24 +58,26 @@ class ScheduledAuditEventTest {
 
     @Test
     void storesProvidedTags() {
-        ScheduledAuditEvent event = ScheduledAuditEvent.started(
-                UUID.randomUUID(),
-                "testTask",
-                Set.of("billing", "noisy"),
-                Instant.now()
-        );
+        ScheduledAuditEvent event = ScheduledAuditEvent.builder()
+                .executionId(UUID.randomUUID())
+                .scheduledMethod("testTask")
+                .tags(Set.of("billing", "noisy"))
+                .status(ScheduledAuditEvent.Status.STARTED)
+                .startedAt(Instant.now())
+                .build();
 
         assertThat(event.getTags()).containsExactlyInAnyOrder("billing", "noisy");
     }
 
     @Test
     void checksWhetherTagIsPresent() {
-        ScheduledAuditEvent event = ScheduledAuditEvent.started(
-                UUID.randomUUID(),
-                "testTask",
-                Set.of("billing", "noisy"),
-                Instant.now()
-        );
+        ScheduledAuditEvent event = ScheduledAuditEvent.builder()
+                .executionId(UUID.randomUUID())
+                .scheduledMethod("testTask")
+                .tags(Set.of("billing", "noisy"))
+                .status(ScheduledAuditEvent.Status.STARTED)
+                .startedAt(Instant.now())
+                .build();
 
         assertThat(event.hasTag("billing")).isTrue();
         assertThat(event.hasTag("ops")).isFalse();
@@ -77,19 +85,25 @@ class ScheduledAuditEventTest {
 
     @Test
     void rejectsNullExecutionId() {
-        assertThatThrownBy(() -> ScheduledAuditEvent.started(null, "testTask", Instant.now()))
+        assertThatThrownBy(() -> ScheduledAuditEvent.builder()
+                .executionId(null)
+                .scheduledMethod("testTask")
+                .status(ScheduledAuditEvent.Status.STARTED)
+                .startedAt(Instant.now())
+                .build())
                 .isInstanceOf(NullPointerException.class)
                 .hasMessage("executionId must not be null");
     }
 
     @Test
     void rejectsSucceededEventWithoutFinishedAt() {
-        assertThatThrownBy(() -> ScheduledAuditEvent.succeeded(
-                UUID.randomUUID(),
-                "testTask",
-                Instant.now(),
-                null
-        ))
+        assertThatThrownBy(() -> ScheduledAuditEvent.builder()
+                .executionId(UUID.randomUUID())
+                .scheduledMethod("testTask")
+                .status(ScheduledAuditEvent.Status.SUCCEEDED)
+                .startedAt(Instant.now())
+                .finishedAt(null)
+                .build())
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("SUCCEEDED event must define finishedAt");
     }
@@ -98,13 +112,14 @@ class ScheduledAuditEventTest {
     void rejectsFailedEventWithoutFailure() {
         Instant startedAt = Instant.now();
 
-        assertThatThrownBy(() -> ScheduledAuditEvent.failed(
-                UUID.randomUUID(),
-                "testTask",
-                startedAt,
-                startedAt.plusSeconds(1),
-                null
-        ))
+        assertThatThrownBy(() -> ScheduledAuditEvent.builder()
+                .executionId(UUID.randomUUID())
+                .scheduledMethod("testTask")
+                .status(ScheduledAuditEvent.Status.FAILED)
+                .startedAt(startedAt)
+                .finishedAt(startedAt.plusSeconds(1))
+                .failure(null)
+                .build())
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("FAILED event must define failure");
     }
