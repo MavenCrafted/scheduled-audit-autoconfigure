@@ -16,7 +16,7 @@ To use the library, add `scheduled-audit-autoconfigure` together with `spring-bo
 <dependency>
     <groupId>io.github.mavencrafted</groupId>
     <artifactId>scheduled-audit-autoconfigure</artifactId>
-    <version>1.0.0</version>
+    <version>2.0.0</version>
 </dependency>
 
 <dependency>
@@ -26,6 +26,23 @@ To use the library, add `scheduled-audit-autoconfigure` together with `spring-bo
 ```
 
 `scheduled-audit-autoconfigure` is enabled automatically when it is present in a Spring Boot application. Existing `@Scheduled` methods are intercepted without additional setup, and the default logging listener can be observed through debug logging.
+
+## Audit Metadata
+
+Scheduled methods can declare optional business metadata with `@ScheduledAudit`:
+
+```java
+@Scheduled(fixedDelay = 600000)
+@ScheduledAudit(schedulerId = "ACCOUNT_CLEANUP", tags = {"billing", "maintenance"})
+public void cleanUpAccounts() {
+    // scheduled work
+}
+```
+
+The emitted `scheduledMethod` uses the fully qualified scheduled method name, for example `io.github.example.AccountCleanupJob.cleanUpAccounts`.
+When `@ScheduledAudit` is present, events also carry the optional `schedulerId` and tags. Declared `schedulerId` values must be unique across scheduled methods; duplicate values fail application startup so audit records remain unambiguous.
+
+## Custom Listeners
 
 Custom listeners can be added by declaring one or more `ScheduledAuditListener` beans:
 
@@ -40,12 +57,16 @@ ScheduledAuditListener databaseScheduledAuditListener() {
 
 When multiple listeners are present, each listener receives every scheduled audit event. The default logging listener remains enabled unless `scheduled-audit.logging.enabled=false` is configured. If one listener fails, the remaining listeners are still invoked and the scheduled job execution is not interrupted.
 
+## Configuration
+
 ```yaml
 scheduled-audit:
   enabled: true
   logging:
     enabled: true
     include-stacktrace: false
+    include-tags: []
+    exclude-tags: []
 
 logging:
   level:
@@ -62,8 +83,21 @@ Scheduled task failed [executionId=3fceebec-f3f9-4acb-bcb7-dc78ac4c8b8b, schedul
 
 Set `scheduled-audit.logging.include-stacktrace=true` to include the full failure stack trace in the default logger.
 
-The emitted `scheduledMethod` uses the fully qualified scheduled method name, for example `io.github.example.AccountCleanupJob.run`.
-When declared with `@ScheduledAudit`, the emitted event also carries an optional `schedulerId` business identifier.
+Use `scheduled-audit.logging.include-tags` to log only events that have at least one configured tag. Use `scheduled-audit.logging.exclude-tags` to suppress events with matching tags; excluded tags take precedence over included tags.
+
+## Configuration Properties
+
+| Property | Default | Description |
+| --- | --- | --- |
+| `scheduled-audit.enabled` | `true` | Enables scheduled audit auto-configuration. |
+| `scheduled-audit.logging.enabled` | `true` | Enables the default logging listener. |
+| `scheduled-audit.logging.include-stacktrace` | `false` | Includes the thrown exception stack trace for failed scheduled executions. |
+| `scheduled-audit.logging.include-tags` | empty | Logs only events with at least one matching tag when configured. |
+| `scheduled-audit.logging.exclude-tags` | empty | Suppresses events with matching tags. Takes precedence over `include-tags`. |
+
+## Migration from 1.x
+
+Version `2.0.0` intentionally renames task-oriented event API to scheduled-method terminology. Consumers that handled `ScheduledAuditEvent` directly should replace `getTaskName()` with `getScheduledMethod()`. Event construction helpers are now internal because events are emitted by the auto-configuration; application code should consume events through `ScheduledAuditListener`.
 
 ## Repository Maintenance
 
