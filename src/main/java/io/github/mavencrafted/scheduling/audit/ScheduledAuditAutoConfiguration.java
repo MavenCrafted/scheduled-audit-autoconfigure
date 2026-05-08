@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -30,6 +31,18 @@ public final class ScheduledAuditAutoConfiguration {
     @ConditionalOnMissingBean(ScheduledAuditAspect.class)
     ScheduledAuditAspect scheduledAuditAspect(List<ScheduledAuditListener> listeners) {
         return new ScheduledAuditAspect(listeners);
+    }
+
+    /**
+     * Registers the startup validator for unique scheduled audit scheduler identifiers.
+     *
+     * @param beanFactory the bean factory used to inspect scheduled beans
+     * @return the scheduler identifier validator
+     */
+    @Bean
+    @ConditionalOnMissingBean(ScheduledAuditSchedulerIdValidator.class)
+    ScheduledAuditSchedulerIdValidator scheduledAuditSchedulerIdValidator(ListableBeanFactory beanFactory) {
+        return new ScheduledAuditSchedulerIdValidator(beanFactory);
     }
 
     /**

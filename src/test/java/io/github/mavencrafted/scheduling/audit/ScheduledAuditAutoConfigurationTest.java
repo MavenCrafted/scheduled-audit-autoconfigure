@@ -3,6 +3,7 @@ package io.github.mavencrafted.scheduling.audit;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -18,6 +19,7 @@ class ScheduledAuditAutoConfigurationTest {
                 assertThat(context).hasNotFailed()
                         .hasSingleBean(ScheduledAuditProperties.class)
                         .hasSingleBean(ScheduledAuditAspect.class)
+                        .hasSingleBean(ScheduledAuditSchedulerIdValidator.class)
                         .hasSingleBean(ScheduledAuditListener.class)
         );
     }
@@ -106,5 +108,35 @@ class ScheduledAuditAutoConfigurationTest {
 
             assertThat(properties.getLogging().isIncludeStacktrace()).isFalse();
         });
+    }
+
+    @Test
+    void contextFailsWhenSchedulerIdsAreDuplicated() {
+        contextRunner.withBean("firstScheduledBean", FirstDuplicateScheduledBean.class, FirstDuplicateScheduledBean::new)
+                .withBean("secondScheduledBean", SecondDuplicateScheduledBean.class, SecondDuplicateScheduledBean::new)
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    assertThat(context.getStartupFailure())
+                            .isInstanceOf(IllegalStateException.class)
+                            .hasMessageContaining("Duplicate scheduled audit schedulerId 'ACCOUNT_CLEANUP'")
+                            .hasMessageContaining("FirstDuplicateScheduledBean.run")
+                            .hasMessageContaining("SecondDuplicateScheduledBean.run");
+                });
+    }
+
+    static final class FirstDuplicateScheduledBean {
+
+        @Scheduled(fixedRate = 1000)
+        @ScheduledAudit(schedulerId = "ACCOUNT_CLEANUP")
+        void run() {
+        }
+    }
+
+    static final class SecondDuplicateScheduledBean {
+
+        @Scheduled(fixedRate = 1000)
+        @ScheduledAudit(schedulerId = "ACCOUNT_CLEANUP")
+        void run() {
+        }
     }
 }
