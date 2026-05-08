@@ -24,7 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Aspect that emits {@link ScheduledAuditEvent} instances around {@code @Scheduled} method execution.
  */
 @Aspect
-public class ScheduledAuditAspect {
+final class ScheduledAuditAspect {
 
     private static final Log logger = LogFactory.getLog(ScheduledAuditAspect.class);
 
@@ -36,7 +36,7 @@ public class ScheduledAuditAspect {
      *
      * @param scheduledAuditListeners the listeners that receive audit events
      */
-    public ScheduledAuditAspect(List<ScheduledAuditListener> scheduledAuditListeners) {
+    ScheduledAuditAspect(List<ScheduledAuditListener> scheduledAuditListeners) {
         this.scheduledAuditListeners = List.copyOf(scheduledAuditListeners);
     }
 
@@ -54,29 +54,37 @@ public class ScheduledAuditAspect {
         Instant startedAt = Instant.now();
         Method method = resolveScheduledMethod(joinPoint);
         ScheduledAuditDescriptor descriptor = resolveDescriptor(method);
-        invokeListenersSafely(ScheduledAuditEvent.started(executionId, descriptor.scheduledMethod(), descriptor.tags(), startedAt));
+        invokeListenersSafely(baseEventBuilder(executionId, descriptor, startedAt)
+                .status(ScheduledAuditEvent.Status.STARTED)
+                .build());
         try {
             Object result = joinPoint.proceed();
-            invokeListenersSafely(ScheduledAuditEvent.succeeded(
-                    executionId,
-                    descriptor.scheduledMethod(),
-                    descriptor.tags(),
-                    startedAt,
-                    Instant.now()
-            ));
+            invokeListenersSafely(baseEventBuilder(executionId, descriptor, startedAt)
+                    .status(ScheduledAuditEvent.Status.SUCCEEDED)
+                    .finishedAt(Instant.now())
+                    .build());
             return result;
         }
         catch (Throwable throwable) {
-            invokeListenersSafely(ScheduledAuditEvent.failed(
-                    executionId,
-                    descriptor.scheduledMethod(),
-                    descriptor.tags(),
-                    startedAt,
-                    Instant.now(),
-                    throwable
-            ));
+            invokeListenersSafely(baseEventBuilder(executionId, descriptor, startedAt)
+                    .status(ScheduledAuditEvent.Status.FAILED)
+                    .finishedAt(Instant.now())
+                    .failure(throwable)
+                    .build());
             throw throwable;
         }
+    }
+
+    private ScheduledAuditEvent.Builder baseEventBuilder(
+            UUID executionId,
+            ScheduledAuditDescriptor descriptor,
+            Instant startedAt
+    ) {
+        return ScheduledAuditEvent.builder()
+                .executionId(executionId)
+                .scheduledMethod(descriptor.scheduledMethod())
+                .tags(descriptor.tags())
+                .startedAt(startedAt);
     }
 
     private void invokeListenersSafely(ScheduledAuditEvent event) {

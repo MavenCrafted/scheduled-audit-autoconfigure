@@ -43,11 +43,12 @@ class LoggingScheduledAuditListenerTest {
     }
 
     private ScheduledAuditEvent eventWithTags(String... tags) {
-        return ScheduledAuditEvent.started(
-                UUID.randomUUID(),
-                "testTask",
-                Set.of(tags),
-                Instant.now()
-        );
+        return ScheduledAuditEvent.builder()
+                .executionId(UUID.randomUUID())
+                .scheduledMethod("testTask")
+                .tags(Set.of(tags))
+                .status(ScheduledAuditEvent.Status.STARTED)
+                .startedAt(Instant.now())
+                .build();
     }
 }

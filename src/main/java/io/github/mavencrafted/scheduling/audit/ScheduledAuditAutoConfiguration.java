@@ -28,7 +28,7 @@ public final class ScheduledAuditAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(ScheduledAuditAspect.class)
-    public ScheduledAuditAspect scheduledAuditAspect(List<ScheduledAuditListener> listeners) {
+    ScheduledAuditAspect scheduledAuditAspect(List<ScheduledAuditListener> listeners) {
         return new ScheduledAuditAspect(listeners);
     }
 

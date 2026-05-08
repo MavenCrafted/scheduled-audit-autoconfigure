@@ -23,6 +23,18 @@ public final class ScheduledAuditEvent {
     private final Instant finishedAt;
     private final Throwable failure;
 
+    private ScheduledAuditEvent(Builder builder) {
+        this(
+                builder.executionId,
+                builder.scheduledMethod,
+                builder.tags,
+                builder.status,
+                builder.startedAt,
+                builder.finishedAt,
+                builder.failure
+        );
+    }
+
     private ScheduledAuditEvent(
             UUID executionId,
             String scheduledMethod,
@@ -43,92 +55,8 @@ public final class ScheduledAuditEvent {
         validateState();
     }
 
-    /**
-     * Creates a started event.
-     *
-     * @param executionId the execution identifier
-     * @param scheduledMethod the fully qualified scheduled method name
-     * @param startedAt the execution start time
-     * @return the created event
-     */
-    public static ScheduledAuditEvent started(UUID executionId, String scheduledMethod, Instant startedAt) {
-        return new ScheduledAuditEvent(executionId, scheduledMethod, Set.of(), Status.STARTED, startedAt, null, null);
-    }
-
-    /**
-     * Creates a started event.
-     *
-     * @param executionId the execution identifier
-     * @param scheduledMethod the fully qualified scheduled method name
-     * @param tags the scheduled task tags
-     * @param startedAt the execution start time
-     * @return the created event
-     */
-    public static ScheduledAuditEvent started(UUID executionId, String scheduledMethod, Set<String> tags, Instant startedAt) {
-        return new ScheduledAuditEvent(executionId, scheduledMethod, tags, Status.STARTED, startedAt, null, null);
-    }
-
-    /**
-     * Creates a succeeded event.
-     *
-     * @param executionId the execution identifier
-     * @param scheduledMethod the fully qualified scheduled method name
-     * @param startedAt the execution start time
-     * @param finishedAt the execution completion time
-     * @return the created event
-     */
-    public static ScheduledAuditEvent succeeded(UUID executionId, String scheduledMethod, Instant startedAt, Instant finishedAt) {
-        return new ScheduledAuditEvent(executionId, scheduledMethod, Set.of(), Status.SUCCEEDED, startedAt, finishedAt, null);
-    }
-
-    /**
-     * Creates a succeeded event.
-     *
-     * @param executionId the execution identifier
-     * @param scheduledMethod the fully qualified scheduled method name
-     * @param tags the scheduled task tags
-     * @param startedAt the execution start time
-     * @param finishedAt the execution completion time
-     * @return the created event
-     */
-    public static ScheduledAuditEvent succeeded(UUID executionId, String scheduledMethod, Set<String> tags, Instant startedAt, Instant finishedAt) {
-        return new ScheduledAuditEvent(executionId, scheduledMethod, tags, Status.SUCCEEDED, startedAt, finishedAt, null);
-    }
-
-    /**
-     * Creates a failed event.
-     *
-     * @param executionId the execution identifier
-     * @param scheduledMethod the fully qualified scheduled method name
-     * @param startedAt the execution start time
-     * @param finishedAt the execution completion time
-     * @param failure the failure raised by the scheduled job
-     * @return the created event
-     */
-    public static ScheduledAuditEvent failed(UUID executionId, String scheduledMethod, Instant startedAt, Instant finishedAt, Throwable failure) {
-        return new ScheduledAuditEvent(executionId, scheduledMethod, Set.of(), Status.FAILED, startedAt, finishedAt, failure);
-    }
-
-    /**
-     * Creates a failed event.
-     *
-     * @param executionId the execution identifier
-     * @param scheduledMethod the fully qualified scheduled method name
-     * @param tags the scheduled task tags
-     * @param startedAt the execution start time
-     * @param finishedAt the execution completion time
-     * @param failure the failure raised by the scheduled job
-     * @return the created event
-     */
-    public static ScheduledAuditEvent failed(
-            UUID executionId,
-            String scheduledMethod,
-            Set<String> tags,
-            Instant startedAt,
-            Instant finishedAt,
-            Throwable failure
-    ) {
-        return new ScheduledAuditEvent(executionId, scheduledMethod, tags, Status.FAILED, startedAt, finishedAt, failure);
+    static Builder builder() {
+        return new Builder();
     }
 
     /**
@@ -272,5 +200,55 @@ public final class ScheduledAuditEvent {
          * The scheduled job completed with a failure.
          */
         FAILED
+    }
+
+    static final class Builder {
+
+        private UUID executionId;
+        private String scheduledMethod;
+        private Set<String> tags = Set.of();
+        private Status status;
+        private Instant startedAt;
+        private Instant finishedAt;
+        private Throwable failure;
+
+        Builder executionId(UUID executionId) {
+            this.executionId = executionId;
+            return this;
+        }
+
+        Builder scheduledMethod(String scheduledMethod) {
+            this.scheduledMethod = scheduledMethod;
+            return this;
+        }
+
+        Builder tags(Set<String> tags) {
+            this.tags = tags;
+            return this;
+        }
+
+        Builder status(Status status) {
+            this.status = status;
+            return this;
+        }
+
+        Builder startedAt(Instant startedAt) {
+            this.startedAt = startedAt;
+            return this;
+        }
+
+        Builder finishedAt(Instant finishedAt) {
+            this.finishedAt = finishedAt;
+            return this;
+        }
+
+        Builder failure(Throwable failure) {
+            this.failure = failure;
+            return this;
+        }
+
+        ScheduledAuditEvent build() {
+            return new ScheduledAuditEvent(this);
+        }
     }
 }
