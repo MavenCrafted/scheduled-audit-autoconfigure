@@ -18,6 +18,7 @@ class ScheduledAuditTest {
         ScheduledAudit annotation = method.getAnnotation(ScheduledAudit.class);
 
         assertThat(annotation).isNotNull();
+        assertThat(annotation.schedulerId()).isEqualTo("ACCOUNT_CLEANUP");
         assertThat(annotation.tags()).containsExactly("billing", "noisy");
     }
 
@@ -35,7 +36,7 @@ class ScheduledAuditTest {
 
     private static final class SampleScheduledTasks {
 
-        @ScheduledAudit(tags = {"billing", "noisy"})
+        @ScheduledAudit(schedulerId = "ACCOUNT_CLEANUP", tags = {"billing", "noisy"})
         void taggedTask() {
         }
     }

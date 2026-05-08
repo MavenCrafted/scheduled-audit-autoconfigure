@@ -30,6 +30,8 @@ class ScheduledAuditAspectTest {
         assertThat(events.get(1).getStatus()).isEqualTo(ScheduledAuditEvent.Status.SUCCEEDED);
         assertThat(events.get(0).getExecutionId()).isEqualTo(events.get(1).getExecutionId());
         assertThat(events.get(0).getScheduledMethod()).contains("SampleScheduledBean").endsWith(".run");
+        assertThat(events.get(0).getSchedulerId()).isEqualTo("ACCOUNT_CLEANUP");
+        assertThat(events.get(1).getSchedulerId()).isEqualTo("ACCOUNT_CLEANUP");
         assertThat(events.get(0).getTags()).containsExactlyInAnyOrder("billing", "noisy");
         assertThat(events.get(1).getTags()).containsExactlyInAnyOrder("billing", "noisy");
         assertThat(events.get(1).getFinishedAt()).isNotNull();
@@ -63,6 +65,8 @@ class ScheduledAuditAspectTest {
 
         assertThat(result).isEqualTo("done");
         assertThat(events).hasSize(2);
+        assertThat(events.get(0).getSchedulerId()).isNull();
+        assertThat(events.get(1).getSchedulerId()).isNull();
         assertThat(events.get(0).getTags()).isEmpty();
         assertThat(events.get(1).getTags()).isEmpty();
     }
@@ -150,7 +154,7 @@ class ScheduledAuditAspectTest {
     static final class SampleScheduledBean {
 
         @Scheduled(fixedRate = 5000)
-        @ScheduledAudit(tags = {"billing", "noisy"})
+        @ScheduledAudit(schedulerId = "ACCOUNT_CLEANUP", tags = {"billing", "noisy"})
         public String run() {
             return "done";
         }

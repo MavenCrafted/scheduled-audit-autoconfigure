@@ -17,6 +17,7 @@ public final class ScheduledAuditEvent {
 
     private final UUID executionId;
     private final String scheduledMethod;
+    private final String schedulerId;
     private final Set<String> tags;
     private final Status status;
     private final Instant startedAt;
@@ -27,6 +28,7 @@ public final class ScheduledAuditEvent {
         this(
                 builder.executionId,
                 builder.scheduledMethod,
+                builder.schedulerId,
                 builder.tags,
                 builder.status,
                 builder.startedAt,
@@ -38,6 +40,7 @@ public final class ScheduledAuditEvent {
     private ScheduledAuditEvent(
             UUID executionId,
             String scheduledMethod,
+            String schedulerId,
             Set<String> tags,
             Status status,
             Instant startedAt,
@@ -46,6 +49,7 @@ public final class ScheduledAuditEvent {
     ) {
         this.executionId = Objects.requireNonNull(executionId, "executionId must not be null");
         this.scheduledMethod = Objects.requireNonNull(scheduledMethod, "scheduledMethod must not be null");
+        this.schedulerId = schedulerId;
         this.tags = Set.copyOf(Objects.requireNonNull(tags, "tags must not be null"));
         this.status = Objects.requireNonNull(status, "status must not be null");
         this.startedAt = Objects.requireNonNull(startedAt, "startedAt must not be null");
@@ -82,6 +86,15 @@ public final class ScheduledAuditEvent {
      */
     public String getScheduledMethod() {
         return scheduledMethod;
+    }
+
+    /**
+     * Returns the optional business identifier for the scheduled method.
+     *
+     * @return the scheduler identifier, or {@code null} when none was declared
+     */
+    public String getSchedulerId() {
+        return this.schedulerId;
     }
 
     /**
@@ -206,6 +219,7 @@ public final class ScheduledAuditEvent {
 
         private UUID executionId;
         private String scheduledMethod;
+        private String schedulerId;
         private Set<String> tags = Set.of();
         private Status status;
         private Instant startedAt;
@@ -219,6 +233,11 @@ public final class ScheduledAuditEvent {
 
         Builder scheduledMethod(String scheduledMethod) {
             this.scheduledMethod = scheduledMethod;
+            return this;
+        }
+
+        Builder schedulerId(String schedulerId) {
+            this.schedulerId = schedulerId;
             return this;
         }
 

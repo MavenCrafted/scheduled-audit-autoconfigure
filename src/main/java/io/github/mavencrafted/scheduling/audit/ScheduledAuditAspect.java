@@ -83,6 +83,7 @@ final class ScheduledAuditAspect {
         return ScheduledAuditEvent.builder()
                 .executionId(executionId)
                 .scheduledMethod(descriptor.scheduledMethod())
+                .schedulerId(descriptor.schedulerId())
                 .tags(descriptor.tags())
                 .startedAt(startedAt);
     }
@@ -112,12 +113,27 @@ final class ScheduledAuditAspect {
     private ScheduledAuditDescriptor extractDescriptor(Method method) {
         String scheduledMethod = ClassUtils.getQualifiedMethodName(method, method.getDeclaringClass());
         try {
-            return new ScheduledAuditDescriptor(scheduledMethod, resolveTags(method));
+            return new ScheduledAuditDescriptor(scheduledMethod, resolveSchedulerId(method), resolveTags(method));
         }
         catch (RuntimeException ex) {
             logger.warn("Failed to resolve ScheduledAudit metadata for scheduled method: " + scheduledMethod, ex);
-            return new ScheduledAuditDescriptor(scheduledMethod, Set.of());
+            return new ScheduledAuditDescriptor(scheduledMethod, null, Set.of());
         }
+    }
+
+    private String resolveSchedulerId(Method method) {
+        ScheduledAudit scheduledAudit = AnnotatedElementUtils.findMergedAnnotation(method, ScheduledAudit.class);
+        if (scheduledAudit == null) {
+            return null;
+        }
+
+        String rawSchedulerId = scheduledAudit.schedulerId();
+        if (rawSchedulerId == null) {
+            return null;
+        }
+
+        String normalizedSchedulerId = rawSchedulerId.trim();
+        return normalizedSchedulerId.isEmpty() ? null : normalizedSchedulerId;
     }
 
     private Set<String> resolveTags(Method method) {
@@ -146,6 +162,6 @@ final class ScheduledAuditAspect {
         return normalizedTags.isEmpty() ? Set.of() : Set.copyOf(normalizedTags);
     }
 
-    private record ScheduledAuditDescriptor(String scheduledMethod, Set<String> tags) {
+    private record ScheduledAuditDescriptor(String scheduledMethod, String schedulerId, Set<String> tags) {
     }
 }

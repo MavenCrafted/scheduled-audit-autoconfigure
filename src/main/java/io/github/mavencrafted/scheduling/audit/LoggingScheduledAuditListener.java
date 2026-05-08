@@ -52,6 +52,7 @@ final class LoggingScheduledAuditListener implements ScheduledAuditListener {
         if (logger.isDebugEnabled()) {
             logger.debug("Scheduled task started [executionId=" + event.getExecutionId()
                     + ", scheduledMethod=" + event.getScheduledMethod()
+                    + schedulerIdPart(event)
                     + ", startedAt=" + event.getStartedAt() + "]");
         }
     }
@@ -60,6 +61,7 @@ final class LoggingScheduledAuditListener implements ScheduledAuditListener {
         if (logger.isDebugEnabled()) {
             logger.debug("Scheduled task succeeded [executionId=" + event.getExecutionId()
                     + ", scheduledMethod=" + event.getScheduledMethod()
+                    + schedulerIdPart(event)
                     + ", startedAt=" + event.getStartedAt()
                     + ", finishedAt=" + event.getFinishedAt()
                     + ", duration=" + event.getDuration() + "]");
@@ -69,6 +71,7 @@ final class LoggingScheduledAuditListener implements ScheduledAuditListener {
     private void logFailed(ScheduledAuditEvent event) {
         String message = "Scheduled task failed [executionId=" + event.getExecutionId()
                 + ", scheduledMethod=" + event.getScheduledMethod()
+                + schedulerIdPart(event)
                 + ", startedAt=" + event.getStartedAt()
                 + ", finishedAt=" + event.getFinishedAt()
                 + ", duration=" + event.getDuration()
@@ -119,5 +122,9 @@ final class LoggingScheduledAuditListener implements ScheduledAuditListener {
 
         return ", failureType=" + failure.getClass().getName()
                 + ", failureMessage=" + failure.getMessage();
+    }
+
+    private String schedulerIdPart(ScheduledAuditEvent event) {
+        return event.getSchedulerId() != null ? ", schedulerId=" + event.getSchedulerId() : "";
     }
 }

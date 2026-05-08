@@ -20,18 +20,32 @@ class ScheduledAuditEventTest {
         ScheduledAuditEvent event = ScheduledAuditEvent.builder()
                 .executionId(executionId)
                 .scheduledMethod("testTask")
+                .schedulerId("ACCOUNT_CLEANUP")
                 .status(ScheduledAuditEvent.Status.STARTED)
                 .startedAt(startedAt)
                 .build();
 
         assertThat(event.getExecutionId()).isEqualTo(executionId);
         assertThat(event.getScheduledMethod()).isEqualTo("testTask");
+        assertThat(event.getSchedulerId()).isEqualTo("ACCOUNT_CLEANUP");
         assertThat(event.getTags()).isEmpty();
         assertThat(event.getStatus()).isEqualTo(ScheduledAuditEvent.Status.STARTED);
         assertThat(event.getStartedAt()).isEqualTo(startedAt);
         assertThat(event.getFinishedAt()).isNull();
         assertThat(event.getDuration()).isNull();
         assertThat(event.getFailure()).isNull();
+    }
+
+    @Test
+    void allowsMissingSchedulerId() {
+        ScheduledAuditEvent event = ScheduledAuditEvent.builder()
+                .executionId(UUID.randomUUID())
+                .scheduledMethod("testTask")
+                .status(ScheduledAuditEvent.Status.STARTED)
+                .startedAt(Instant.now())
+                .build();
+
+        assertThat(event.getSchedulerId()).isNull();
     }
 
     @Test

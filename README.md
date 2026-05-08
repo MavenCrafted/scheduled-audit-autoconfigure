@@ -63,6 +63,7 @@ Scheduled task failed [executionId=3fceebec-f3f9-4acb-bcb7-dc78ac4c8b8b, schedul
 Set `scheduled-audit.logging.include-stacktrace=true` to include the full failure stack trace in the default logger.
 
 The emitted `scheduledMethod` uses the fully qualified scheduled method name, for example `io.github.example.AccountCleanupJob.run`.
+When declared with `@ScheduledAudit`, the emitted event also carries an optional `schedulerId` business identifier.
 
 ## Repository Maintenance
 
