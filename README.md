@@ -48,10 +48,22 @@ Custom listeners can be added by declaring one or more `ScheduledAuditListener` 
 
 ```java
 @Bean
-ScheduledAuditListener databaseScheduledAuditListener() {
-    return event -> {
-        // handle the audit event
-    };
+ScheduledAuditListener databaseScheduledAuditListener(
+        ScheduledAuditRepository repository) {
+
+    return event -> repository.save(
+            ScheduledAuditEntity.from(event));
+}
+```
+```java
+@Bean
+ScheduledAuditListener kafkaScheduledAuditListener(
+        KafkaTemplate<String, ScheduledAuditEvent> kafka) {
+
+    return event -> kafka.send(
+            "scheduled-audit-events",
+            event.executionId(),
+            event);
 }
 ```
 
