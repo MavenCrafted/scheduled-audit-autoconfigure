@@ -10,6 +10,12 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+## [2.1.0] - 2026-06-05
+
+### Added
+
+- Added optional Micrometer metrics integration with automatic `MeterRegistry` publishing.
+
 ## [2.0.0] - 2026-05-08
 
 ### Added
