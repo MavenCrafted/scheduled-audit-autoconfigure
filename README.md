@@ -71,9 +71,13 @@ When multiple listeners are present, each listener receives every scheduled audi
 
 ## Metrics
 
-The Micrometer listener is registered automatically when a `MeterRegistry` bean is available. Applications using Spring Boot Actuator typically already provide a registry.
+Micrometer metrics can be enabled by setting `scheduled-audit.metrics.enabled=true`
 
-Scheduled audit events are published as Micrometer metrics and can be exported to monitoring systems such as Prometheus, Datadog, New Relic, Grafana Cloud, or OpenTelemetry through Micrometer integrations.
+When enabled, the Micrometer listener is registered automatically if a `MeterRegistry` bean is available. Applications using Spring Boot Actuator typically already provide a registry.
+
+Metrics are emitted only for scheduled methods annotated with `@ScheduledAudit` that define a non-empty `schedulerId`.
+
+The resulting metrics can be exported to monitoring systems such as Prometheus, Datadog, New Relic, Grafana Cloud, or OpenTelemetry through Micrometer integrations.
 
 ## Configuration
 
