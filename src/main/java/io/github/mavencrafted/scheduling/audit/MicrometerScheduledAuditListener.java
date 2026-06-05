@@ -12,10 +12,10 @@ import org.springframework.util.StringUtils;
  */
 final class MicrometerScheduledAuditListener implements ScheduledAuditListener {
 
-    private static final String EXECUTIONS_METRIC = "scheduled.audit.executions";
+    private static final String EXECUTIONS_METRIC = "mavencrafted.scheduled.audit.executions";
     private static final String EXECUTIONS_METRIC_DESCRIPTION = "Total number of scheduled task executions grouped by execution status";
 
-    private static final String DURATION_METRIC = "scheduled.audit.duration";
+    private static final String DURATION_METRIC = "mavencrafted.scheduled.audit.duration";
     private static final String DURATION_METRIC_DESCRIPTION = "Execution duration of scheduled tasks grouped by execution status";
 
     private static final String SCHEDULER_ID_TAG = "scheduler.id";
