@@ -106,6 +106,7 @@ Use `scheduled-audit.logging.include-tags` to log only events that have at least
 | `scheduled-audit.logging.include-stacktrace` | `false` | Includes the thrown exception stack trace for failed scheduled executions. |
 | `scheduled-audit.logging.include-tags` | empty | Logs only events with at least one matching tag when configured. |
 | `scheduled-audit.logging.exclude-tags` | empty | Suppresses events with matching tags. Takes precedence over `include-tags`. |
+| `scheduled-audit.metrics.enabled` | false | Enables the Micrometer metrics listener. Requires Micrometer on the classpath and a `MeterRegistry` bean in the application context. |
 
 ## Migration from 1.x
 
