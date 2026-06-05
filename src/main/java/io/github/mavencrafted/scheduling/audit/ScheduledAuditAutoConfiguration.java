@@ -1,5 +1,6 @@
 package io.github.mavencrafted.scheduling.audit;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -62,5 +63,30 @@ public final class ScheduledAuditAutoConfiguration {
     )
     LoggingScheduledAuditListener loggingScheduledAuditListener(ScheduledAuditProperties scheduledAuditProperties) {
         return new LoggingScheduledAuditListener(scheduledAuditProperties.getLogging());
+    }
+
+    /**
+    * Configuration for publishing scheduled audit metrics when Micrometer is available.
+    */
+    @ConditionalOnClass(MeterRegistry.class)
+    static class MicrometerConfiguration {
+
+        /**
+         * Registers the Micrometer metrics listener when Micrometer is available,
+         * metrics are enabled, and no explicit metrics listener bean is present.
+         *
+         * @param meterRegistry the Micrometer meter registry used to record scheduled audit metrics
+         * @return the Micrometer scheduled audit listener
+         */
+        @Bean
+        @ConditionalOnMissingBean(MicrometerScheduledAuditListener.class)
+        @ConditionalOnProperty(
+                prefix = "scheduled-audit.metrics",
+                name = "enabled",
+                havingValue = "true"
+        )
+        MicrometerScheduledAuditListener micrometerScheduledAuditListener(MeterRegistry meterRegistry) {
+            return new MicrometerScheduledAuditListener(meterRegistry);
+        }
     }
 }
