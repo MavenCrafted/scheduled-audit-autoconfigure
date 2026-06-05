@@ -26,7 +26,7 @@ class MicrometerScheduledAuditListenerTests {
 
         listener.onEvent(event);
 
-        Counter counter = registry.find("scheduled.audit.executions")
+        Counter counter = registry.find("mavencrafted.scheduled.audit.executions")
                 .tag("scheduler.id", "test-scheduler")
                 .tag("status", "SUCCEEDED")
                 .counter();
@@ -41,7 +41,7 @@ class MicrometerScheduledAuditListenerTests {
 
         listener.onEvent(event);
 
-        Timer timer = registry.find("scheduled.audit.duration")
+        Timer timer = registry.find("mavencrafted.scheduled.audit.duration")
                 .tag("scheduler.id", "test-scheduler")
                 .tag("status", "SUCCEEDED")
                 .timer();
@@ -57,8 +57,8 @@ class MicrometerScheduledAuditListenerTests {
         listener.onEvent(event("", STARTED_AT.plusMillis(100)));
         listener.onEvent(event("   ", STARTED_AT.plusMillis(100)));
 
-        assertThat(registry.find("scheduled.audit.executions").counter()).isNull();
-        assertThat(registry.find("scheduled.audit.duration").timer()).isNull();
+        assertThat(registry.find("mavencrafted.scheduled.audit.executions").counter()).isNull();
+        assertThat(registry.find("mavencrafted.scheduled.audit.duration").timer()).isNull();
     }
 
     private static ScheduledAuditEvent event(String schedulerId, Instant finishedAt) {
