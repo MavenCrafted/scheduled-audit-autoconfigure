@@ -16,7 +16,7 @@ To use the library, add `scheduled-audit-autoconfigure` together with `spring-bo
 <dependency>
     <groupId>io.github.mavencrafted</groupId>
     <artifactId>scheduled-audit-autoconfigure</artifactId>
-    <version>2.0.0</version>
+    <version>2.1.0</version>
 </dependency>
 
 <dependency>
@@ -69,6 +69,12 @@ ScheduledAuditListener kafkaScheduledAuditListener(
 
 When multiple listeners are present, each listener receives every scheduled audit event. The default logging listener remains enabled unless `scheduled-audit.logging.enabled=false` is configured. If one listener fails, the remaining listeners are still invoked and the scheduled job execution is not interrupted.
 
+## Metrics
+
+The Micrometer listener is registered automatically when a `MeterRegistry` bean is available. Applications using Spring Boot Actuator typically already provide a registry.
+
+Scheduled audit events are published as Micrometer metrics and can be exported to monitoring systems such as Prometheus, Datadog, New Relic, Grafana Cloud, or OpenTelemetry through Micrometer integrations.
+
 ## Configuration
 
 ```yaml
@@ -79,6 +85,8 @@ scheduled-audit:
     include-stacktrace: false
     include-tags: []
     exclude-tags: []
+  metrics:
+    enabled: true
 
 logging:
   level:
