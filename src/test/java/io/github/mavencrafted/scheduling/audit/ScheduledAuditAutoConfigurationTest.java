@@ -1,6 +1,9 @@
 package io.github.mavencrafted.scheduling.audit;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.UnsatisfiedDependencyException;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -121,6 +124,78 @@ class ScheduledAuditAutoConfigurationTest {
                             .hasMessageContaining("Duplicate scheduled audit schedulerId 'ACCOUNT_CLEANUP'")
                             .hasMessageContaining("FirstDuplicateScheduledBean.run")
                             .hasMessageContaining("SecondDuplicateScheduledBean.run");
+                });
+    }
+
+    @Test
+    void contextDoesNotCreateMicrometerListenerWhenMetricsPropertyIsMissing() {
+        contextRunner.withBean(MeterRegistry.class, SimpleMeterRegistry::new)
+                .run(context -> {
+                    assertThat(context).hasNotFailed()
+                            .doesNotHaveBean(MicrometerScheduledAuditListener.class);
+
+                    assertThat(context.getBeansOfType(ScheduledAuditListener.class))
+                            .containsKey("loggingScheduledAuditListener")
+                            .hasSize(1);
+                });
+    }
+
+    @Test
+    void contextDoesNotCreateMicrometerListenerWhenMetricsAreDisabled() {
+        contextRunner.withBean(MeterRegistry.class, SimpleMeterRegistry::new)
+                .withPropertyValues("scheduled-audit.metrics.enabled=false")
+                .run(context -> {
+                    assertThat(context).hasNotFailed()
+                            .doesNotHaveBean(MicrometerScheduledAuditListener.class);
+
+                    assertThat(context.getBeansOfType(ScheduledAuditListener.class))
+                            .containsKey("loggingScheduledAuditListener")
+                            .hasSize(1);
+                });
+    }
+
+    @Test
+    void contextCreatesMicrometerListenerWhenMetricsAreEnabledAndMeterRegistryExists() {
+        contextRunner.withBean(MeterRegistry.class, SimpleMeterRegistry::new)
+                .withPropertyValues("scheduled-audit.metrics.enabled=true")
+                .run(context -> {
+                    assertThat(context).hasNotFailed()
+                            .hasSingleBean(MeterRegistry.class)
+                            .hasSingleBean(MicrometerScheduledAuditListener.class)
+                            .hasSingleBean(LoggingScheduledAuditListener.class);
+
+                    assertThat(context.getBeansOfType(ScheduledAuditListener.class))
+                            .containsKeys("loggingScheduledAuditListener", "micrometerScheduledAuditListener")
+                            .hasSize(2);
+                });
+    }
+
+    @Test
+    void contextFailsWhenMetricsAreEnabledAndMeterRegistryIsMissing() {
+        contextRunner.withPropertyValues("scheduled-audit.metrics.enabled=true")
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    assertThat(context.getStartupFailure())
+                            .isInstanceOf(UnsatisfiedDependencyException.class)
+                            .hasMessageContaining("MeterRegistry");
+                });
+    }
+
+    @Test
+    void contextUsesCustomMicrometerListenerWhenPresent() {
+        contextRunner.withBean(MeterRegistry.class, SimpleMeterRegistry::new)
+                .withBean("customMicrometerListener", MicrometerScheduledAuditListener.class,
+                        () -> new MicrometerScheduledAuditListener(new SimpleMeterRegistry()))
+                .withPropertyValues("scheduled-audit.metrics.enabled=true")
+                .run(context -> {
+                    assertThat(context).hasNotFailed()
+                            .hasSingleBean(MicrometerScheduledAuditListener.class)
+                            .hasSingleBean(LoggingScheduledAuditListener.class);
+
+                    assertThat(context.getBeansOfType(ScheduledAuditListener.class))
+                            .containsKeys("loggingScheduledAuditListener", "customMicrometerListener")
+                            .doesNotContainKey("micrometerScheduledAuditListener")
+                            .hasSize(2);
                 });
     }
 
