@@ -1,16 +1,35 @@
-# Scheduled Audit Auto-Configuration
+# Scheduled Audit AutoConfigure
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.mavencrafted/scheduled-audit-autoconfigure?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.mavencrafted/scheduled-audit-autoconfigure/overview)
 [![javadoc](https://javadoc.io/badge2/io.github.mavencrafted/scheduled-audit-autoconfigure/javadoc.svg)](https://javadoc.io/doc/io.github.mavencrafted/scheduled-audit-autoconfigure)
 [![CodeQL](https://github.com/MavenCrafted/scheduled-audit-autoconfigure/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/MavenCrafted/scheduled-audit-autoconfigure/actions/workflows/github-code-scanning/codeql)
 
-`scheduled-audit-autoconfigure` is a Spring Boot auto-configuration module for publishing audit events around `@Scheduled` job executions.
+Automatic audit events for Spring `@Scheduled` jobs.
 
-It provides a listener-based extension point for scheduled job lifecycle events such as start, completion, and failure, and includes a default logging listener out of the box.
+This library instruments scheduled task execution and publishes structured audit events for:
+
+- Job started
+- Job completed successfully
+- Job failed
+
+It allows applications to:
+
+- Track scheduled job execution
+- Send audit events to external systems
+- Collect metrics through Micrometer
+- Build operational dashboards and alerts
+- Standardize scheduled-job observability across services
+
+## Requirements
+
+- Java 17+
+- Spring Boot 3+
+- Spring Scheduling enabled, for example with `@EnableScheduling`
+- Spring AOP, usually through `spring-boot-starter-aop`
 
 ## Installation
 
-To use the library, add `scheduled-audit-autoconfigure` together with `spring-boot-starter-aop`:
+Maven:
 
 ```xml
 <dependency>
@@ -25,59 +44,242 @@ To use the library, add `scheduled-audit-autoconfigure` together with `spring-bo
 </dependency>
 ```
 
-`scheduled-audit-autoconfigure` is enabled automatically when it is present in a Spring Boot application. Existing `@Scheduled` methods are intercepted without additional setup, and the default logging listener can be observed through debug logging.
+Gradle:
 
-## Audit Metadata
+```groovy
+implementation "io.github.mavencrafted:scheduled-audit-autoconfigure:2.1.0"
+implementation "org.springframework.boot:spring-boot-starter-aop"
+```
 
-Scheduled methods can declare optional business metadata with `@ScheduledAudit`:
+## Quick Start
 
 ```java
-@Scheduled(fixedDelay = 600000)
-@ScheduledAudit(schedulerId = "ACCOUNT_CLEANUP", tags = {"billing", "maintenance"})
-public void cleanUpAccounts() {
+import io.github.mavencrafted.scheduling.audit.ScheduledAudit;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+@Component
+public class CleanupJob {
+
+    @Scheduled(cron = "0 0 * * * *")
+    @ScheduledAudit(
+            schedulerId = "cleanup-job",
+            tags = {"maintenance", "cleanup"}
+    )
+    public void execute() {
+        // business logic
+    }
+}
+```
+
+No additional library configuration is required. The auto-configuration is enabled by default when the library and Spring AOP are present.
+
+## Core Concept: schedulerId
+
+Every audited job must define a unique `schedulerId`.
+
+```java
+@ScheduledAudit(schedulerId = "daily-report")
+```
+
+The `schedulerId` is the stable business identifier for a scheduled task. It is used for:
+
+- Audit events
+- Metrics
+- Alerting
+- Dashboards
+- Correlation across deployments
+
+Rules:
+
+- Required by `@ScheduledAudit`
+- Must be globally unique across the application
+- Whitespace is trimmed before use
+- Blank values are invalid and should not be used
+- Startup fails when duplicate non-empty IDs are detected
+
+Good:
+
+```java
+schedulerId = "daily-report"
+schedulerId = "cleanup-job"
+schedulerId = "invoice-reconciliation"
+```
+
+Bad:
+
+```java
+schedulerId = "job1"
+schedulerId = "task"
+schedulerId = "scheduled-task"
+```
+
+## Audit Event Lifecycle
+
+A single execution produces:
+
+```text
+STARTED
+  |
+  v
+SUCCEEDED
+```
+
+or:
+
+```text
+STARTED
+  |
+  v
+FAILED
+```
+
+The same `executionId` is shared by the `STARTED` event and its terminal `SUCCEEDED` or `FAILED` event.
+
+## Listening To Events
+
+Implement `ScheduledAuditListener` to publish, persist, or forward audit events.
+
+```java
+import io.github.mavencrafted.scheduling.audit.ScheduledAuditEvent;
+import io.github.mavencrafted.scheduling.audit.ScheduledAuditListener;
+import org.springframework.stereotype.Component;
+
+@Component
+public class AuditPublisher implements ScheduledAuditListener {
+
+    @Override
+    public void onEvent(ScheduledAuditEvent event) {
+        // publish to Kafka
+        // store in a database
+        // forward to SIEM
+    }
+}
+```
+
+Runtime exceptions from listeners are logged and isolated. Listener failures do not interrupt scheduled-job execution, and remaining listeners still receive the event.
+
+## Event Structure
+
+`ScheduledAuditEvent` contains:
+
+- `executionId`
+- `scheduledMethod`
+- `schedulerId`
+- `status`
+- `startedAt`
+- `finishedAt`
+- `duration`
+- `tags`
+- `failure`
+
+Statuses:
+
+- `STARTED`
+- `SUCCEEDED`
+- `FAILED`
+
+Example event payload when serialized by an application:
+
+```json
+{
+  "executionId": "8f8df9b2-c84c-4a54-a6a4-7cd0f9c0f6ee",
+  "scheduledMethod": "com.example.CleanupJob.execute",
+  "schedulerId": "cleanup-job",
+  "status": "SUCCEEDED",
+  "startedAt": "2026-05-06T19:22:00.012974Z",
+  "finishedAt": "2026-05-06T19:22:02.326974Z",
+  "duration": "PT2.314S",
+  "tags": ["maintenance", "cleanup"]
+}
+```
+
+## Metrics
+
+When Micrometer is present and metrics are enabled, execution metrics are published automatically for terminal events that have a `schedulerId`.
+
+```yaml
+scheduled-audit:
+  metrics:
+    enabled: true
+```
+
+Metric names:
+
+- `mavencrafted.scheduled.audit.executions`
+- `mavencrafted.scheduled.audit.duration`
+
+Dimensions:
+
+- `scheduler.id`
+- `status`
+
+Status values:
+
+- `SUCCEEDED`
+- `FAILED`
+
+Applications using Spring Boot Actuator typically already provide a Micrometer `MeterRegistry`. Metrics can then be exported through the usual Micrometer integrations, such as Prometheus, Datadog, New Relic, Grafana Cloud, or OpenTelemetry.
+
+## Logging
+
+The default logging listener is enabled by default. It writes `STARTED` and `SUCCEEDED` events at `DEBUG` level and `FAILED` events at `ERROR` level.
+
+```yaml
+logging:
+  level:
+    io.github.mavencrafted: DEBUG
+```
+
+Example log lines:
+
+```text
+Scheduled task started [executionId=8f8df9b2-c84c-4a54-a6a4-7cd0f9c0f6ee, scheduledMethod=com.example.CleanupJob.execute, schedulerId=cleanup-job, startedAt=2026-05-06T19:22:00.012974Z]
+Scheduled task succeeded [executionId=8f8df9b2-c84c-4a54-a6a4-7cd0f9c0f6ee, scheduledMethod=com.example.CleanupJob.execute, schedulerId=cleanup-job, startedAt=2026-05-06T19:22:00.012974Z, finishedAt=2026-05-06T19:22:02.326974Z, duration=PT2.314S]
+
+Scheduled task started [executionId=3fceebec-f3f9-4acb-bcb7-dc78ac4c8b8b, scheduledMethod=com.example.CleanupJob.execute, schedulerId=cleanup-job, startedAt=2026-05-06T19:22:00.012974Z]
+Scheduled task failed [executionId=3fceebec-f3f9-4acb-bcb7-dc78ac4c8b8b, scheduledMethod=com.example.CleanupJob.execute, schedulerId=cleanup-job, startedAt=2026-05-06T19:23:00.028913Z, finishedAt=2026-05-06T19:23:01.037654Z, duration=PT1.008741S, failureType=java.lang.IllegalStateException, failureMessage=Scheduled task failed]
+```
+
+Set `scheduled-audit.logging.include-stacktrace=true` to include full failure stack traces.
+
+Use `scheduled-audit.logging.include-tags` to log only events that have at least one configured tag. Use `scheduled-audit.logging.exclude-tags` to suppress events with matching tags. Excluded tags take precedence over included tags.
+
+## AOP Limitations
+
+This library uses Spring AOP interception. Because of Spring proxy behavior:
+
+- Self-invocation is not intercepted
+- Final methods are not advised
+- Final classes may not be proxied
+- Only Spring-managed beans are supported
+
+Example:
+
+```java
+public void methodA() {
+    methodB();
+}
+
+@Scheduled(cron = "0 0 * * * *")
+@ScheduledAudit(schedulerId = "daily-report")
+public void methodB() {
     // scheduled work
 }
 ```
 
-The emitted `scheduledMethod` uses the fully qualified scheduled method name, for example `io.github.example.AccountCleanupJob.cleanUpAccounts`.
-When `@ScheduledAudit` is present, events also carry the optional `schedulerId` and tags. Declared `schedulerId` values must be unique across scheduled methods; duplicate values fail application startup so audit records remain unambiguous.
+The direct call from `methodA()` to `methodB()` bypasses Spring AOP.
 
-## Custom Listeners
+## Failure Handling
 
-Custom listeners can be added by declaring one or more `ScheduledAuditListener` beans:
+When a scheduled task throws an exception:
 
-```java
-@Bean
-ScheduledAuditListener databaseScheduledAuditListener(
-        ScheduledAuditRepository repository) {
+- A `FAILED` event is emitted
+- Execution duration is recorded
+- The original exception is rethrown
+- Spring scheduling behavior remains unchanged
 
-    return event -> repository.save(
-            ScheduledAuditEntity.from(event));
-}
-```
-```java
-@Bean
-ScheduledAuditListener kafkaScheduledAuditListener(
-        KafkaTemplate<String, ScheduledAuditEvent> kafka) {
-
-    return event -> kafka.send(
-            "scheduled-audit-events",
-            event.executionId(),
-            event);
-}
-```
-
-When multiple listeners are present, each listener receives every scheduled audit event. The default logging listener remains enabled unless `scheduled-audit.logging.enabled=false` is configured. If one listener fails, the remaining listeners are still invoked and the scheduled job execution is not interrupted.
-
-## Metrics
-
-Micrometer metrics can be enabled by setting `scheduled-audit.metrics.enabled=true`
-
-When enabled, the Micrometer listener is registered automatically if a `MeterRegistry` bean is available. Applications using Spring Boot Actuator typically already provide a registry.
-
-Metrics are emitted only for scheduled methods annotated with `@ScheduledAudit` that define a non-empty `schedulerId`.
-
-The resulting metrics can be exported to monitoring systems such as Prometheus, Datadog, New Relic, Grafana Cloud, or OpenTelemetry through Micrometer integrations.
+The library never swallows application exceptions.
 
 ## Configuration
 
@@ -90,26 +292,8 @@ scheduled-audit:
     include-tags: []
     exclude-tags: []
   metrics:
-    enabled: true
-
-logging:
-  level:
-    io.github.mavencrafted: DEBUG
+    enabled: false
 ```
-
-With this configuration, the default logging listener writes `STARTED` and `SUCCEEDED` events at `DEBUG` level and `FAILED` events at `ERROR` level:
-
-```text
-Scheduled task started [executionId=8f8df9b2-c84c-4a54-a6a4-7cd0f9c0f6ee, scheduledMethod=io.github.example.AccountCleanupJob.run, startedAt=2026-05-06T19:22:00.012974Z]
-Scheduled task succeeded [executionId=8f8df9b2-c84c-4a54-a6a4-7cd0f9c0f6ee, scheduledMethod=io.github.example.AccountCleanupJob.run, startedAt=2026-05-06T19:22:00.012974Z, finishedAt=2026-05-06T19:22:10.017384Z, duration=PT10.00441S]
-Scheduled task failed [executionId=3fceebec-f3f9-4acb-bcb7-dc78ac4c8b8b, scheduledMethod=io.github.example.AccountCleanupJob.run, startedAt=2026-05-06T19:22:30.028913Z, finishedAt=2026-05-06T19:22:40.037654Z, duration=PT10.008741S, failureType=java.lang.IllegalStateException, failureMessage=Scheduled task failed]
-```
-
-Set `scheduled-audit.logging.include-stacktrace=true` to include the full failure stack trace in the default logger.
-
-Use `scheduled-audit.logging.include-tags` to log only events that have at least one configured tag. Use `scheduled-audit.logging.exclude-tags` to suppress events with matching tags; excluded tags take precedence over included tags.
-
-## Configuration Properties
 
 | Property | Default | Description |
 | --- | --- | --- |
@@ -118,16 +302,29 @@ Use `scheduled-audit.logging.include-tags` to log only events that have at least
 | `scheduled-audit.logging.include-stacktrace` | `false` | Includes the thrown exception stack trace for failed scheduled executions. |
 | `scheduled-audit.logging.include-tags` | empty | Logs only events with at least one matching tag when configured. |
 | `scheduled-audit.logging.exclude-tags` | empty | Suppresses events with matching tags. Takes precedence over `include-tags`. |
-| `scheduled-audit.metrics.enabled` | false | Enables the Micrometer metrics listener. Requires Micrometer on the classpath and a `MeterRegistry` bean in the application context. |
+| `scheduled-audit.metrics.enabled` | `false` | Enables the Micrometer metrics listener. Requires Micrometer on the classpath and a `MeterRegistry` bean. |
 
-## Migration from 1.x
+## Design Goals
 
-Version `2.0.0` intentionally renames task-oriented event API to scheduled-method terminology. Consumers that handled `ScheduledAuditEvent` directly should replace `getTaskName()` with `getScheduledMethod()`. Event construction helpers are now internal because events are emitted by the auto-configuration; application code should consume events through `ScheduledAuditListener`.
+- Zero business-code changes beyond declaring audit metadata
+- Explicit job identity
+- Low operational overhead
+- Micrometer integration
+- Framework-neutral event consumers
+- Production-safe failure isolation
 
-## Repository Maintenance
+## When To Use This Library
 
-This repository is maintained with consistent branch and commit conventions:
+Use it when you need:
 
-- Branch format: `<type>/<scope>-<description>`
-- Commit format: `type(scope): description`
-- Supported types: `feat`, `fix`, `chore`, `refactor`, `docs`, `test`
+- Operational visibility for scheduled jobs
+- Audit trails
+- Alerting on failures
+- Metrics and dashboards
+- Standardized job execution reporting
+
+Do not use it as a job scheduler replacement.
+
+## Migration From 1.x
+
+Version `2.0.0` intentionally renamed task-oriented event API to scheduled-method terminology. Consumers that handled `ScheduledAuditEvent` directly should replace `getTaskName()` with `getScheduledMethod()`. Event construction helpers are internal because events are emitted by the auto-configuration; application code should consume events through `ScheduledAuditListener`.
