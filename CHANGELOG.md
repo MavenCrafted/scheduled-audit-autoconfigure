@@ -16,6 +16,10 @@ All notable changes to this project will be documented in this file.
 
 - Added optional Micrometer metrics integration with automatic `MeterRegistry` publishing.
 
+### Changed
+
+- `@ScheduledAudit` now requires an explicit `schedulerId` value.
+
 ## [2.0.0] - 2026-05-08
 
 ### Added
