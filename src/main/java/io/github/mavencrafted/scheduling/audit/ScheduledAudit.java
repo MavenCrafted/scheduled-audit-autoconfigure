@@ -20,7 +20,7 @@ public @interface ScheduledAudit {
      *
      * @return the configured scheduler identifier
      */
-    String schedulerId() default "";
+    String schedulerId();
 
     /**
      * Returns the audit tags associated with the scheduled method.
