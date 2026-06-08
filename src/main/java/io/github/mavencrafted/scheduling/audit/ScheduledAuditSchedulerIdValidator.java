@@ -47,12 +47,12 @@ final class ScheduledAuditSchedulerIdValidator implements SmartInitializingSingl
             return;
         }
 
+        String scheduledMethod = ClassUtils.getQualifiedMethodName(method, targetClass);
         String schedulerId = normalizeSchedulerId(scheduledAudit.schedulerId());
         if (schedulerId == null) {
-            return;
+            throw new IllegalStateException("Blank scheduled audit schedulerId found on method '" + scheduledMethod + "'");
         }
 
-        String scheduledMethod = ClassUtils.getQualifiedMethodName(method, targetClass);
         String existingScheduledMethod = scheduledMethodsBySchedulerId.putIfAbsent(schedulerId, scheduledMethod);
 
         if (existingScheduledMethod != null && !existingScheduledMethod.equals(scheduledMethod)) {

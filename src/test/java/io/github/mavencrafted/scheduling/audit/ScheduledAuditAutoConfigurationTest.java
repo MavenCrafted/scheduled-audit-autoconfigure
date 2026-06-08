@@ -164,6 +164,19 @@ class ScheduledAuditAutoConfigurationTest {
     }
 
     @Test
+    void contextFailsWhenSchedulerIdIsBlank() {
+        contextRunner.withBean("blankSchedulerIdScheduledBean", BlankSchedulerIdScheduledBean.class,
+                        BlankSchedulerIdScheduledBean::new)
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    assertThat(context.getStartupFailure())
+                            .isInstanceOf(IllegalStateException.class)
+                            .hasMessageContaining("Blank scheduled audit schedulerId")
+                            .hasMessageContaining("BlankSchedulerIdScheduledBean.run");
+                });
+    }
+
+    @Test
     void contextDoesNotCreateMicrometerListenerWhenMetricsPropertyIsMissing() {
         contextRunner.withBean(MeterRegistry.class, SimpleMeterRegistry::new)
                 .run(context -> {
@@ -247,6 +260,14 @@ class ScheduledAuditAutoConfigurationTest {
 
         @Scheduled(fixedRate = 1000)
         @ScheduledAudit(schedulerId = "ACCOUNT_CLEANUP")
+        void run() {
+        }
+    }
+
+    static final class BlankSchedulerIdScheduledBean {
+
+        @Scheduled(fixedRate = 1000)
+        @ScheduledAudit(tags = {"BLABLA"}, schedulerId = " ")
         void run() {
         }
     }
