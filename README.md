@@ -36,7 +36,7 @@ Maven:
 <dependency>
     <groupId>io.github.mavencrafted</groupId>
     <artifactId>scheduled-audit-autoconfigure</artifactId>
-    <version>2.1.0</version>
+    <version>2.2.0</version>
 </dependency>
 
 <dependency>
@@ -48,7 +48,7 @@ Maven:
 Gradle:
 
 ```groovy
-implementation "io.github.mavencrafted:scheduled-audit-autoconfigure:2.1.0"
+implementation "io.github.mavencrafted:scheduled-audit-autoconfigure:2.2.0"
 implementation "org.springframework.boot:spring-boot-starter-aop"
 ```
 
@@ -101,10 +101,10 @@ The `schedulerId` is the stable business identifier for a scheduled task. It is 
 Rules:
 
 - Required by `@ScheduledAudit`
-- Must be globally unique across the application
+- Must be globally unique across scheduled bean instances in the application
 - Whitespace is trimmed before use
-- Blank values are invalid and should not be used
-- Startup fails when duplicate non-empty IDs are detected
+- Blank values fail application startup
+- Startup fails when duplicate IDs are detected
 
 Good:
 

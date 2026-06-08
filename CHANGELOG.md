@@ -6,11 +6,27 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Added `scheduled-audit.scope` to choose whether all Spring `@Scheduled` methods are audited or only methods annotated with `@ScheduledAudit`.
-
 ### Changed
 
 ### Fixed
+
+## [2.2.0] - 2026-06-09
+
+### Added
+
+- Added `scheduled-audit.scope` to choose whether all Spring `@Scheduled` methods are audited or only methods annotated with `@ScheduledAudit`.
+- Added Spring Boot configuration metadata for IDE completion of `scheduled-audit` properties.
+- Added Maven Wrapper.
+- Added CI and CodeQL GitHub Actions workflows.
+
+### Changed
+
+- Release workflows now use the Maven Wrapper.
+
+### Fixed
+
+- Blank `schedulerId` values on `@ScheduledAudit` now fail application startup.
+- Duplicate `schedulerId` values are now detected across scheduled bean instances, not only across different methods.
 
 ## [2.1.0] - 2026-06-05
 
