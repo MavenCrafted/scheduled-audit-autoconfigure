@@ -115,6 +115,19 @@ class ScheduledAuditAutoConfigurationTest {
     }
 
     @Test
+    void contextBindsMetricsEnabled() {
+        contextRunner.withBean(MeterRegistry.class, SimpleMeterRegistry::new)
+                .withPropertyValues("scheduled-audit.metrics.enabled=true")
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+
+                    ScheduledAuditProperties properties = context.getBean(ScheduledAuditProperties.class);
+
+                    assertThat(properties.getMetrics().isEnabled()).isTrue();
+                });
+    }
+
+    @Test
     void contextDefaultsAuditScopeToAll() {
         contextRunner.run(context -> {
             assertThat(context).hasNotFailed();

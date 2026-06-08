@@ -27,6 +27,11 @@ public class ScheduledAuditProperties {
     private final Logging logging = new Logging();
 
     /**
+     * Metrics configuration for the Micrometer scheduled audit listener.
+     */
+    private final Metrics metrics = new Metrics();
+
+    /**
      * Returns whether scheduled audit support is enabled.
      *
      * @return {@code true} when scheduled audit support is enabled
@@ -69,6 +74,15 @@ public class ScheduledAuditProperties {
      */
     public Logging getLogging() {
         return this.logging;
+    }
+
+    /**
+     * Returns the metrics properties for the Micrometer scheduled audit listener.
+     *
+     * @return the metrics properties
+     */
+    public Metrics getMetrics() {
+        return this.metrics;
     }
 
     /**
@@ -166,6 +180,35 @@ public class ScheduledAuditProperties {
          */
         public void setExcludeTags(Set<String> excludeTags) {
             this.excludeTags = (excludeTags != null ? excludeTags : new LinkedHashSet<>());
+        }
+    }
+
+    /**
+     * Metrics properties for the Micrometer scheduled audit listener.
+     */
+    public static class Metrics {
+
+        /**
+         * Whether the Micrometer metrics listener is enabled.
+         */
+        private boolean enabled = false;
+
+        /**
+         * Returns whether the Micrometer metrics listener is enabled.
+         *
+         * @return {@code true} when the Micrometer metrics listener is enabled
+         */
+        public boolean isEnabled() {
+            return this.enabled;
+        }
+
+        /**
+         * Sets whether the Micrometer metrics listener is enabled.
+         *
+         * @param enabled whether the Micrometer metrics listener is enabled
+         */
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
         }
     }
 
