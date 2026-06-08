@@ -26,12 +26,13 @@ public final class ScheduledAuditAutoConfiguration {
      * Registers the scheduled audit aspect.
      *
      * @param listeners the listeners that receive audit events
+     * @param scheduledAuditProperties the scheduled audit configuration properties
      * @return the scheduled audit aspect
      */
     @Bean
     @ConditionalOnMissingBean(ScheduledAuditAspect.class)
-    ScheduledAuditAspect scheduledAuditAspect(List<ScheduledAuditListener> listeners) {
-        return new ScheduledAuditAspect(listeners);
+    ScheduledAuditAspect scheduledAuditAspect(List<ScheduledAuditListener> listeners, ScheduledAuditProperties scheduledAuditProperties) {
+        return new ScheduledAuditAspect(listeners, scheduledAuditProperties.getScope());
     }
 
     /**

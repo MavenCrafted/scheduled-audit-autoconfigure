@@ -28,6 +28,7 @@ final class ScheduledAuditAspect {
 
     private static final Log logger = LogFactory.getLog(ScheduledAuditAspect.class);
 
+    private final ScheduledAuditProperties.Scope scope;
     private final List<ScheduledAuditListener> scheduledAuditListeners;
     private final Map<Method, ScheduledAuditDescriptor> scheduledAuditDescriptors = new ConcurrentHashMap<>();
 
@@ -37,6 +38,17 @@ final class ScheduledAuditAspect {
      * @param scheduledAuditListeners the listeners that receive audit events
      */
     ScheduledAuditAspect(List<ScheduledAuditListener> scheduledAuditListeners) {
+        this(scheduledAuditListeners, ScheduledAuditProperties.Scope.ALL);
+    }
+
+    /**
+     * Creates a new aspect backed by the provided listeners and audit scope.
+     *
+     * @param scheduledAuditListeners the listeners that receive audit events
+     * @param scope which scheduled methods should emit audit events
+     */
+    ScheduledAuditAspect(List<ScheduledAuditListener> scheduledAuditListeners, ScheduledAuditProperties.Scope scope) {
+        this.scope = scope != null ? scope : ScheduledAuditProperties.Scope.ALL;
         this.scheduledAuditListeners = List.copyOf(scheduledAuditListeners);
     }
 
@@ -50,10 +62,14 @@ final class ScheduledAuditAspect {
      */
     @Around("@annotation(scheduled)")
     public Object audit(ProceedingJoinPoint joinPoint, Scheduled scheduled) throws Throwable {
-        UUID executionId = UUID.randomUUID();
-        Instant startedAt = Instant.now();
         Method method = resolveScheduledMethod(joinPoint);
         ScheduledAuditDescriptor descriptor = resolveDescriptor(method);
+        if (!shouldAudit(descriptor)) {
+            return joinPoint.proceed();
+        }
+
+        UUID executionId = UUID.randomUUID();
+        Instant startedAt = Instant.now();
         invokeListenersSafely(baseEventBuilder(executionId, descriptor, startedAt)
                 .status(ScheduledAuditEvent.Status.STARTED)
                 .build());
@@ -113,20 +129,29 @@ final class ScheduledAuditAspect {
     private ScheduledAuditDescriptor extractDescriptor(Method method) {
         String scheduledMethod = ClassUtils.getQualifiedMethodName(method, method.getDeclaringClass());
         try {
-            return new ScheduledAuditDescriptor(scheduledMethod, resolveSchedulerId(method), resolveTags(method));
+            ScheduledAudit scheduledAudit = AnnotatedElementUtils.findMergedAnnotation(method, ScheduledAudit.class);
+            if (scheduledAudit == null) {
+                return new ScheduledAuditDescriptor(scheduledMethod, null, Set.of(), false);
+            }
+
+            return new ScheduledAuditDescriptor(
+                    scheduledMethod,
+                    resolveSchedulerId(scheduledAudit),
+                    resolveTags(scheduledAudit),
+                    true
+            );
         }
         catch (RuntimeException ex) {
             logger.warn("Failed to resolve ScheduledAudit metadata for scheduled method: " + scheduledMethod, ex);
-            return new ScheduledAuditDescriptor(scheduledMethod, null, Set.of());
+            return new ScheduledAuditDescriptor(scheduledMethod, null, Set.of(), true);
         }
     }
 
-    private String resolveSchedulerId(Method method) {
-        ScheduledAudit scheduledAudit = AnnotatedElementUtils.findMergedAnnotation(method, ScheduledAudit.class);
-        if (scheduledAudit == null) {
-            return null;
-        }
+    private boolean shouldAudit(ScheduledAuditDescriptor descriptor) {
+        return this.scope == ScheduledAuditProperties.Scope.ALL || descriptor.hasScheduledAudit();
+    }
 
+    private String resolveSchedulerId(ScheduledAudit scheduledAudit) {
         String rawSchedulerId = scheduledAudit.schedulerId();
         if (rawSchedulerId == null) {
             return null;
@@ -136,12 +161,7 @@ final class ScheduledAuditAspect {
         return normalizedSchedulerId.isEmpty() ? null : normalizedSchedulerId;
     }
 
-    private Set<String> resolveTags(Method method) {
-        ScheduledAudit scheduledAudit = AnnotatedElementUtils.findMergedAnnotation(method, ScheduledAudit.class);
-        if (scheduledAudit == null) {
-            return Set.of();
-        }
-
+    private Set<String> resolveTags(ScheduledAudit scheduledAudit) {
         String[] rawTags = scheduledAudit.tags();
         if (rawTags.length == 0) {
             return Set.of();
@@ -162,6 +182,11 @@ final class ScheduledAuditAspect {
         return normalizedTags.isEmpty() ? Set.of() : Set.copyOf(normalizedTags);
     }
 
-    private record ScheduledAuditDescriptor(String scheduledMethod, String schedulerId, Set<String> tags) {
+    private record ScheduledAuditDescriptor(
+            String scheduledMethod,
+            String schedulerId,
+            Set<String> tags,
+            boolean hasScheduledAudit
+    ) {
     }
 }

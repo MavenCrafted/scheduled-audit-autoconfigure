@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Added `scheduled-audit.scope` to choose whether all Spring `@Scheduled` methods are audited or only methods annotated with `@ScheduledAudit`.
+
 ### Changed
 
 ### Fixed

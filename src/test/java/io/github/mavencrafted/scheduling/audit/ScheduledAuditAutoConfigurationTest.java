@@ -103,6 +103,29 @@ class ScheduledAuditAutoConfigurationTest {
     }
 
     @Test
+    void contextBindsAuditScope() {
+        contextRunner.withPropertyValues("scheduled-audit.scope=annotated")
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+
+                    ScheduledAuditProperties properties = context.getBean(ScheduledAuditProperties.class);
+
+                    assertThat(properties.getScope()).isEqualTo(ScheduledAuditProperties.Scope.ANNOTATED);
+                });
+    }
+
+    @Test
+    void contextDefaultsAuditScopeToAll() {
+        contextRunner.run(context -> {
+            assertThat(context).hasNotFailed();
+
+            ScheduledAuditProperties properties = context.getBean(ScheduledAuditProperties.class);
+
+            assertThat(properties.getScope()).isEqualTo(ScheduledAuditProperties.Scope.ALL);
+        });
+    }
+
+    @Test
     void contextDefaultsFailedLoggingStacktraceToFalse() {
         contextRunner.run(context -> {
             assertThat(context).hasNotFailed();
