@@ -72,6 +72,39 @@ class ScheduledAuditAspectTest {
     }
 
     @Test
+    void skipsUnannotatedScheduledMethodsWhenScopeIsAnnotated() throws Throwable {
+        List<ScheduledAuditEvent> events = new ArrayList<>();
+        ScheduledAuditAspect aspect = new ScheduledAuditAspect(
+                List.of(events::add),
+                ScheduledAuditProperties.Scope.ANNOTATED
+        );
+        Method method = plainScheduledMethod();
+
+        Object result = aspect.audit(joinPoint(method, "done"), scheduled(method));
+
+        assertThat(result).isEqualTo("done");
+        assertThat(events).isEmpty();
+    }
+
+    @Test
+    void publishesAnnotatedScheduledMethodsWhenScopeIsAnnotated() throws Throwable {
+        List<ScheduledAuditEvent> events = new ArrayList<>();
+        ScheduledAuditAspect aspect = new ScheduledAuditAspect(
+                List.of(events::add),
+                ScheduledAuditProperties.Scope.ANNOTATED
+        );
+        Method method = scheduledMethod();
+
+        Object result = aspect.audit(joinPoint(method, "done"), scheduled(method));
+
+        assertThat(result).isEqualTo("done");
+        assertThat(events)
+                .extracting(ScheduledAuditEvent::getStatus)
+                .containsExactly(ScheduledAuditEvent.Status.STARTED, ScheduledAuditEvent.Status.SUCCEEDED);
+        assertThat(events.get(0).getSchedulerId()).isEqualTo("ACCOUNT_CLEANUP");
+    }
+
+    @Test
     void ignoresListenerFailure() throws Throwable {
         ScheduledAuditAspect aspect = new ScheduledAuditAspect(List.of(event -> {
             throw new IllegalStateException("listener failed");

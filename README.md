@@ -74,9 +74,16 @@ public class CleanupJob {
 
 No additional library configuration is required. The auto-configuration is enabled by default when the library and Spring AOP are present.
 
+By default, the library audits all Spring `@Scheduled` methods. To emit audit events only for methods that explicitly declare `@ScheduledAudit`, use:
+
+```yaml
+scheduled-audit:
+  scope: annotated
+```
+
 ## Core Concept: schedulerId
 
-Every audited job must define a unique `schedulerId`.
+Every job annotated with `@ScheduledAudit` must define a unique `schedulerId`.
 
 ```java
 @ScheduledAudit(schedulerId = "daily-report")
@@ -286,6 +293,7 @@ The library never swallows application exceptions.
 ```yaml
 scheduled-audit:
   enabled: true
+  scope: all
   logging:
     enabled: true
     include-stacktrace: false
@@ -298,6 +306,7 @@ scheduled-audit:
 | Property | Default | Description |
 | --- | --- | --- |
 | `scheduled-audit.enabled` | `true` | Enables scheduled audit auto-configuration. |
+| `scheduled-audit.scope` | `all` | Controls which scheduled methods emit audit events. Use `all` to audit every Spring `@Scheduled` method, or `annotated` to audit only methods that also declare `@ScheduledAudit`. |
 | `scheduled-audit.logging.enabled` | `true` | Enables the default logging listener. |
 | `scheduled-audit.logging.include-stacktrace` | `false` | Includes the thrown exception stack trace for failed scheduled executions. |
 | `scheduled-audit.logging.include-tags` | empty | Logs only events with at least one matching tag when configured. |

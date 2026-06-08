@@ -17,6 +17,11 @@ public class ScheduledAuditProperties {
     private boolean enabled = true;
 
     /**
+     * Which scheduled methods should emit audit events.
+     */
+    private Scope scope = Scope.ALL;
+
+    /**
      * Logging configuration for the default scheduled audit listener.
      */
     private final Logging logging = new Logging();
@@ -37,6 +42,24 @@ public class ScheduledAuditProperties {
      */
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    /**
+     * Returns which scheduled methods should emit audit events.
+     *
+     * @return the scheduled audit scope
+     */
+    public Scope getScope() {
+        return this.scope;
+    }
+
+    /**
+     * Sets which scheduled methods should emit audit events.
+     *
+     * @param scope the scheduled audit scope
+     */
+    public void setScope(Scope scope) {
+        this.scope = (scope != null ? scope : Scope.ALL);
     }
 
     /**
@@ -144,5 +167,19 @@ public class ScheduledAuditProperties {
         public void setExcludeTags(Set<String> excludeTags) {
             this.excludeTags = (excludeTags != null ? excludeTags : new LinkedHashSet<>());
         }
+    }
+
+    /**
+     * Defines which scheduled methods should emit audit events.
+     */
+    public enum Scope {
+        /**
+         * Audit every Spring {@code @Scheduled} method.
+         */
+        ALL,
+        /**
+         * Audit only Spring {@code @Scheduled} methods that also declare {@link ScheduledAudit}.
+         */
+        ANNOTATED
     }
 }
