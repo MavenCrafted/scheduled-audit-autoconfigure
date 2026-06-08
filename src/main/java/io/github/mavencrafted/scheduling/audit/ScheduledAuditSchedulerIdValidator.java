@@ -25,19 +25,26 @@ final class ScheduledAuditSchedulerIdValidator implements SmartInitializingSingl
 
     @Override
     public void afterSingletonsInstantiated() {
-        Map<String, String> scheduledMethodsBySchedulerId = new LinkedHashMap<>();
+        Map<String, String> scheduledJobsBySchedulerId = new LinkedHashMap<>();
 
-        for (Object bean : this.beanFactory.getBeansOfType(Object.class, false, false).values()) {
+        for (String beanName : this.beanFactory.getBeanNamesForType(Object.class, false, false)) {
+            Object bean = this.beanFactory.getBean(beanName);
             Class<?> targetClass = AopUtils.getTargetClass(bean);
             if (targetClass == null) {
                 continue;
             }
 
-            ReflectionUtils.doWithMethods(targetClass, method -> validateSchedulerId(method, targetClass, scheduledMethodsBySchedulerId));
+            ReflectionUtils.doWithMethods(targetClass,
+                    method -> validateSchedulerId(beanName, method, targetClass, scheduledJobsBySchedulerId));
         }
     }
 
-    private void validateSchedulerId(Method method, Class<?> targetClass, Map<String, String> scheduledMethodsBySchedulerId) {
+    private void validateSchedulerId(
+            String beanName,
+            Method method,
+            Class<?> targetClass,
+            Map<String, String> scheduledJobsBySchedulerId
+    ) {
         if (!AnnotatedElementUtils.hasAnnotation(method, Scheduled.class)) {
             return;
         }
@@ -48,16 +55,17 @@ final class ScheduledAuditSchedulerIdValidator implements SmartInitializingSingl
         }
 
         String scheduledMethod = ClassUtils.getQualifiedMethodName(method, targetClass);
+        String scheduledJob = beanName + ":" + scheduledMethod;
         String schedulerId = normalizeSchedulerId(scheduledAudit.schedulerId());
         if (schedulerId == null) {
-            throw new IllegalStateException("Blank scheduled audit schedulerId found on method '" + scheduledMethod + "'");
+            throw new IllegalStateException("Blank scheduled audit schedulerId found on scheduled job '" + scheduledJob + "'");
         }
 
-        String existingScheduledMethod = scheduledMethodsBySchedulerId.putIfAbsent(schedulerId, scheduledMethod);
+        String existingScheduledJob = scheduledJobsBySchedulerId.putIfAbsent(schedulerId, scheduledJob);
 
-        if (existingScheduledMethod != null && !existingScheduledMethod.equals(scheduledMethod)) {
+        if (existingScheduledJob != null && !existingScheduledJob.equals(scheduledJob)) {
             throw new IllegalStateException("Duplicate scheduled audit schedulerId '" + schedulerId
-                    + "' found on methods '" + existingScheduledMethod + "' and '" + scheduledMethod + "'");
+                    + "' found on scheduled jobs '" + existingScheduledJob + "' and '" + scheduledJob + "'");
         }
     }
 

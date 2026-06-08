@@ -158,8 +158,27 @@ class ScheduledAuditAutoConfigurationTest {
                     assertThat(context.getStartupFailure())
                             .isInstanceOf(IllegalStateException.class)
                             .hasMessageContaining("Duplicate scheduled audit schedulerId 'ACCOUNT_CLEANUP'")
+                            .hasMessageContaining("firstScheduledBean:")
                             .hasMessageContaining("FirstDuplicateScheduledBean.run")
+                            .hasMessageContaining("secondScheduledBean:")
                             .hasMessageContaining("SecondDuplicateScheduledBean.run");
+                });
+    }
+
+    @Test
+    void contextFailsWhenSchedulerIdsAreDuplicatedAcrossBeanInstances() {
+        contextRunner.withBean("firstDuplicateBeanInstance", DuplicateBeanInstanceScheduledBean.class,
+                        DuplicateBeanInstanceScheduledBean::new)
+                .withBean("secondDuplicateBeanInstance", DuplicateBeanInstanceScheduledBean.class,
+                        DuplicateBeanInstanceScheduledBean::new)
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    assertThat(context.getStartupFailure())
+                            .isInstanceOf(IllegalStateException.class)
+                            .hasMessageContaining("Duplicate scheduled audit schedulerId 'ACCOUNT_CLEANUP'")
+                            .hasMessageContaining("firstDuplicateBeanInstance:")
+                            .hasMessageContaining("secondDuplicateBeanInstance:")
+                            .hasMessageContaining("DuplicateBeanInstanceScheduledBean.run");
                 });
     }
 
@@ -172,6 +191,7 @@ class ScheduledAuditAutoConfigurationTest {
                     assertThat(context.getStartupFailure())
                             .isInstanceOf(IllegalStateException.class)
                             .hasMessageContaining("Blank scheduled audit schedulerId")
+                            .hasMessageContaining("blankSchedulerIdScheduledBean:")
                             .hasMessageContaining("BlankSchedulerIdScheduledBean.run");
                 });
     }
@@ -257,6 +277,14 @@ class ScheduledAuditAutoConfigurationTest {
     }
 
     static final class SecondDuplicateScheduledBean {
+
+        @Scheduled(fixedRate = 1000)
+        @ScheduledAudit(schedulerId = "ACCOUNT_CLEANUP")
+        void run() {
+        }
+    }
+
+    static final class DuplicateBeanInstanceScheduledBean {
 
         @Scheduled(fixedRate = 1000)
         @ScheduledAudit(schedulerId = "ACCOUNT_CLEANUP")
