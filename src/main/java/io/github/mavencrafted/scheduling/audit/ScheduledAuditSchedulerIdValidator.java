@@ -1,6 +1,5 @@
 package io.github.mavencrafted.scheduling.audit;
 
-import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.core.annotation.AnnotatedElementUtils;
@@ -28,14 +27,13 @@ final class ScheduledAuditSchedulerIdValidator implements SmartInitializingSingl
         Map<String, String> scheduledJobsBySchedulerId = new LinkedHashMap<>();
 
         for (String beanName : this.beanFactory.getBeanNamesForType(Object.class, false, false)) {
-            Object bean = this.beanFactory.getBean(beanName);
-            Class<?> targetClass = AopUtils.getTargetClass(bean);
-            if (targetClass == null) {
+            Class<?> type = this.beanFactory.getType(beanName, false);
+            if (type == null) {
                 continue;
             }
 
-            ReflectionUtils.doWithMethods(targetClass,
-                    method -> validateSchedulerId(beanName, method, targetClass, scheduledJobsBySchedulerId));
+            ReflectionUtils.doWithMethods(type,
+                    method -> validateSchedulerId(beanName, method, type, scheduledJobsBySchedulerId));
         }
     }
 

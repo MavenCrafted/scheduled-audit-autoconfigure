@@ -10,6 +10,12 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+## [2.2.1] - 2026-06-10
+
+### Fixed
+
+- Scheduled audit scheduler ID validation no longer instantiates lazy beans during application startup.
+
 ## [2.2.0] - 2026-06-09
 
 ### Added

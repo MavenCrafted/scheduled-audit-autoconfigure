@@ -16,9 +16,10 @@ import java.lang.annotation.Target;
 public @interface ScheduledAudit {
 
     /**
-     * Returns the optional business identifier for the scheduled method.
+     * Returns the required business identifier for the scheduled method.
+     * The identifier must be unique across scheduled audit methods.
      *
-     * @return the configured scheduler identifier
+     * @return the configured scheduler identifier; must not be blank
      */
     String schedulerId();
 

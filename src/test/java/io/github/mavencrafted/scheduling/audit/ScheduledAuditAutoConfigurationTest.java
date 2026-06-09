@@ -8,6 +8,8 @@ import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.scheduling.annotation.Scheduled;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class ScheduledAuditAutoConfigurationTest {
@@ -197,6 +199,27 @@ class ScheduledAuditAutoConfigurationTest {
     }
 
     @Test
+    void contextValidatesLazyScheduledBeansWithoutInstantiatingThem() {
+        AtomicBoolean lazyBeanInstantiated = new AtomicBoolean();
+
+        contextRunner.withBean("lazyBlankSchedulerIdScheduledBean", LazyBlankSchedulerIdScheduledBean.class,
+                        () -> {
+                            lazyBeanInstantiated.set(true);
+                            return new LazyBlankSchedulerIdScheduledBean();
+                        },
+                        beanDefinition -> beanDefinition.setLazyInit(true))
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    assertThat(lazyBeanInstantiated).isFalse();
+                    assertThat(context.getStartupFailure())
+                            .isInstanceOf(IllegalStateException.class)
+                            .hasMessageContaining("Blank scheduled audit schedulerId")
+                            .hasMessageContaining("lazyBlankSchedulerIdScheduledBean:")
+                            .hasMessageContaining("LazyBlankSchedulerIdScheduledBean.run");
+                });
+    }
+
+    @Test
     void contextDoesNotCreateMicrometerListenerWhenMetricsPropertyIsMissing() {
         contextRunner.withBean(MeterRegistry.class, SimpleMeterRegistry::new)
                 .run(context -> {
@@ -299,4 +322,13 @@ class ScheduledAuditAutoConfigurationTest {
         void run() {
         }
     }
+
+    static final class LazyBlankSchedulerIdScheduledBean {
+
+        @Scheduled(fixedRate = 1000)
+        @ScheduledAudit(schedulerId = " ")
+        void run() {
+        }
+    }
+
 }
