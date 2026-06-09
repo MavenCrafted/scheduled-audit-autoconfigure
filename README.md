@@ -36,7 +36,7 @@ Maven:
 <dependency>
     <groupId>io.github.mavencrafted</groupId>
     <artifactId>scheduled-audit-autoconfigure</artifactId>
-    <version>2.2.0</version>
+    <version>2.2.1</version>
 </dependency>
 
 <dependency>
@@ -48,7 +48,7 @@ Maven:
 Gradle:
 
 ```groovy
-implementation "io.github.mavencrafted:scheduled-audit-autoconfigure:2.2.0"
+implementation "io.github.mavencrafted:scheduled-audit-autoconfigure:2.2.1"
 implementation "org.springframework.boot:spring-boot-starter-aop"
 ```
 
