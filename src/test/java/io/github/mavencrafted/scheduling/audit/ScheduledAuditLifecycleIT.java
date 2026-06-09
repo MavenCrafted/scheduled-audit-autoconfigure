@@ -16,10 +16,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 @SpringBootTest(
-        classes = ScheduledAuditIntegrationTest.TestApplication.class,
+        classes = ScheduledAuditLifecycleIT.TestApplication.class,
         webEnvironment = SpringBootTest.WebEnvironment.NONE
 )
-class ScheduledAuditIntegrationTest {
+class ScheduledAuditLifecycleIT {
 
     @Autowired
     private TestScheduledAuditListener listener;
@@ -38,7 +38,7 @@ class ScheduledAuditIntegrationTest {
                 .containsExactly(ScheduledAuditEvent.Status.STARTED, ScheduledAuditEvent.Status.SUCCEEDED);
         assertThat(started.getExecutionId()).isEqualTo(succeeded.getExecutionId());
         assertThat(started.getScheduledMethod())
-                .isEqualTo("io.github.mavencrafted.scheduling.audit.ScheduledAuditIntegrationTest$SampleScheduledBean.run");
+                .isEqualTo("io.github.mavencrafted.scheduling.audit.ScheduledAuditLifecycleIT$SampleScheduledBean.run");
         assertThat(started.getSchedulerId()).isEqualTo("ACCOUNT_CLEANUP");
         assertThat(succeeded.getSchedulerId()).isEqualTo("ACCOUNT_CLEANUP");
         assertThat(started.getTags()).containsExactlyInAnyOrder("billing", "noisy");

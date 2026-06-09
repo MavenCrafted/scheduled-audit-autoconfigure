@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class MicrometerScheduledAuditListenerTests {
+class MicrometerScheduledAuditListenerTest {
 
     private static final Instant STARTED_AT = Instant.parse("2026-01-01T10:00:00Z");
 
@@ -68,7 +68,7 @@ class MicrometerScheduledAuditListenerTests {
                 .schedulerId(schedulerId)
                 .tags(Set.of())
                 .status(ScheduledAuditEvent.Status.SUCCEEDED)
-                .startedAt(MicrometerScheduledAuditListenerTests.STARTED_AT)
+                .startedAt(MicrometerScheduledAuditListenerTest.STARTED_AT)
                 .finishedAt(finishedAt)
                 .build();
     }
