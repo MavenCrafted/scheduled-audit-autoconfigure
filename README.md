@@ -82,6 +82,18 @@ scheduled-audit:
   scope: annotated
 ```
 
+## Sample Application
+
+A runnable Spring Boot example is available in [`examples/scheduled-audit-demo`](examples/scheduled-audit-demo). It demonstrates a successful scheduled job and an intentionally failing scheduled job so both `SUCCEEDED` and `FAILED` audit events are visible.
+
+From the repository root:
+
+```sh
+./mvnw install
+cd examples/scheduled-audit-demo
+../../mvnw spring-boot:run
+```
+
 ## Core Concept: schedulerId
 
 Every job annotated with `@ScheduledAudit` must define a unique `schedulerId`.

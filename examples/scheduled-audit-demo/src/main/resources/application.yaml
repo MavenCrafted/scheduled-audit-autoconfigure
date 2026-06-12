@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: scheduled-audit-demo
+  main:
+    banner-mode: off
+
+scheduled-audit:
+  scope: annotated
+  logging:
+    enabled: false
