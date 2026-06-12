@@ -29,6 +29,6 @@ jobs:
       - name: Run tests and install local artifact
         run: ./mvnw -B --no-transfer-progress install
 
-      - name: Compile sample
+      - name: Compile example
         working-directory: examples/scheduled-audit-demo
         run: ../../mvnw -B --no-transfer-progress compile
