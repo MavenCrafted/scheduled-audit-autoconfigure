@@ -32,9 +32,9 @@ It allows applications to:
 
 | Library version | Spring Boot version | Java version | Status |
 | --- | --- | --- | --- |
-| `2.2.1` | `3.x` | `17`, `21`, `25` | Supported and tested |
+| `2.2.1` | `3.x` | `17+` (tested on `17`, `21`, and `25`) | Supported and tested |
 | `2.2.1` | `2.x` | Not applicable | Unsupported |
-| `2.2.1` | `4.x` | Not tested | Not tested |
+| `2.2.1` | `4.x` | Not tested | Not officially supported |
 
 Library version `1.x` is no longer supported.
 
@@ -142,6 +142,34 @@ Bad:
 schedulerId = "job1"
 schedulerId = "task"
 schedulerId = "scheduled-task"
+```
+
+## How It Works
+
+```mermaid
+flowchart TB
+    A["@Scheduled method"]
+    B["Spring AOP interception"]
+    C["ScheduledAuditEvent<br/>STARTED / SUCCEEDED / FAILED"]
+
+    D["Logging listener"]
+    E["Micrometer listener"]
+    F["Custom listener"]
+
+    G["Application logs"]
+    H["Metrics registry"]
+    I["External systems"]
+
+    A --> B
+    B --> C
+
+    C --> D
+    C --> E
+    C --> F
+
+    D --> G
+    E --> H
+    F --> I
 ```
 
 ## Audit Event Lifecycle
