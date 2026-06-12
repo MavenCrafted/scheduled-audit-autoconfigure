@@ -82,7 +82,7 @@ scheduled-audit:
   scope: annotated
 ```
 
-## Sample Application
+## Example Application
 
 A runnable Spring Boot example is available in [`examples/scheduled-audit-demo`](examples/scheduled-audit-demo). It demonstrates a successful scheduled job and an intentionally failing scheduled job so both `SUCCEEDED` and `FAILED` audit events are visible.
 
