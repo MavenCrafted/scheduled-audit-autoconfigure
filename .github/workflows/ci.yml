@@ -26,5 +26,9 @@ jobs:
           java-version: '17'
           cache: maven
 
-      - name: Run tests
-        run: ./mvnw -B --no-transfer-progress verify
+      - name: Run tests and install local artifact
+        run: ./mvnw -B --no-transfer-progress install
+
+      - name: Compile example
+        working-directory: examples/scheduled-audit-demo
+        run: ../../mvnw -B --no-transfer-progress compile
