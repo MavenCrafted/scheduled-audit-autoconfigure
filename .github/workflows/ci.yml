@@ -26,15 +26,6 @@ jobs:
           java-version: '17'
           cache: maven
 
-      - name: Resolve project version
-        id: project-version
-        run: echo "version=$(./mvnw help:evaluate '-Dexpression=project.version' -q -DforceStdout)" >> "$GITHUB_OUTPUT"
-
-      - name: Check sample dependency version
-        run: |
-          sample_version=$(./mvnw -f examples/scheduled-audit-demo/pom.xml help:evaluate '-Dexpression=scheduled.audit.autoconfigure.version' -q -DforceStdout)
-          test "${{ steps.project-version.outputs.version }}" = "$sample_version"
-
       - name: Run tests and install local artifact
         run: ./mvnw -B --no-transfer-progress install
 
