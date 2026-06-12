@@ -28,6 +28,16 @@ It allows applications to:
 - Spring Scheduling enabled, for example with `@EnableScheduling`
 - Spring AOP, usually through `spring-boot-starter-aop`
 
+## Compatibility
+
+| Library version | Spring Boot version | Java version | Status |
+| --- | --- | --- | --- |
+| `2.2.1` | `3.x` | `17`, `21`, `25` | Supported and tested |
+| `2.2.1` | `2.x` | Not applicable | Unsupported |
+| `2.2.1` | `4.x` | Not tested | Not tested |
+
+Library version `1.x` is no longer supported.
+
 ## Installation
 
 Maven:
