@@ -18,5 +18,3 @@ From the repository root:
 cd examples/scheduled-audit-demo
 ../../mvnw spring-boot:run
 ```
-
-The example dependency version should match the root project version. CI checks this and compiles the example after installing the local library artifact.
