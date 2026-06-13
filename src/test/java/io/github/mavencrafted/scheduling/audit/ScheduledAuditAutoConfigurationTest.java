@@ -117,6 +117,19 @@ class ScheduledAuditAutoConfigurationTest {
     }
 
     @Test
+    void contextBindsSchedulerIdPolicy() {
+        contextRunner.withPropertyValues("scheduled-audit.scheduler-id-policy=required")
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+
+                    ScheduledAuditProperties properties = context.getBean(ScheduledAuditProperties.class);
+
+                    assertThat(properties.getSchedulerIdPolicy())
+                            .isEqualTo(ScheduledAuditProperties.SchedulerIdPolicy.REQUIRED);
+                });
+    }
+
+    @Test
     void contextBindsMetricsEnabled() {
         contextRunner.withBean(MeterRegistry.class, SimpleMeterRegistry::new)
                 .withPropertyValues("scheduled-audit.metrics.enabled=true")
@@ -137,6 +150,18 @@ class ScheduledAuditAutoConfigurationTest {
             ScheduledAuditProperties properties = context.getBean(ScheduledAuditProperties.class);
 
             assertThat(properties.getScope()).isEqualTo(ScheduledAuditProperties.Scope.ALL);
+        });
+    }
+
+    @Test
+    void contextDefaultsSchedulerIdPolicyToOptional() {
+        contextRunner.run(context -> {
+            assertThat(context).hasNotFailed();
+
+            ScheduledAuditProperties properties = context.getBean(ScheduledAuditProperties.class);
+
+            assertThat(properties.getSchedulerIdPolicy())
+                    .isEqualTo(ScheduledAuditProperties.SchedulerIdPolicy.OPTIONAL);
         });
     }
 
@@ -195,6 +220,49 @@ class ScheduledAuditAutoConfigurationTest {
                             .hasMessageContaining("Blank scheduled audit schedulerId")
                             .hasMessageContaining("blankSchedulerIdScheduledBean:")
                             .hasMessageContaining("BlankSchedulerIdScheduledBean.run");
+                });
+    }
+
+    @Test
+    void contextAllowsScheduledMethodsWithoutSchedulerIdWhenSchedulerIdPolicyIsOptional() {
+        contextRunner.withBean("plainScheduledBean", PlainScheduledBean.class, PlainScheduledBean::new)
+                .run(context -> assertThat(context).hasNotFailed());
+    }
+
+    @Test
+    void contextFailsWhenSchedulerIdPolicyIsRequiredAndScheduledAuditIsMissing() {
+        contextRunner.withPropertyValues("scheduled-audit.scheduler-id-policy=required")
+                .withBean("plainScheduledBean", PlainScheduledBean.class, PlainScheduledBean::new)
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    assertThat(context.getStartupFailure())
+                            .isInstanceOf(IllegalStateException.class)
+                            .hasMessageContaining("Missing scheduled audit schedulerId")
+                            .hasMessageContaining("scheduled-audit.scheduler-id-policy=required")
+                            .hasMessageContaining("plainScheduledBean:")
+                            .hasMessageContaining("PlainScheduledBean.run");
+                });
+    }
+
+    @Test
+    void contextValidatesRequiredSchedulerIdPolicyOnLazyScheduledBeansWithoutInstantiatingThem() {
+        AtomicBoolean lazyBeanInstantiated = new AtomicBoolean();
+
+        contextRunner.withPropertyValues("scheduled-audit.scheduler-id-policy=required")
+                .withBean("lazyPlainScheduledBean", LazyPlainScheduledBean.class,
+                        () -> {
+                            lazyBeanInstantiated.set(true);
+                            return new LazyPlainScheduledBean();
+                        },
+                        beanDefinition -> beanDefinition.setLazyInit(true))
+                .run(context -> {
+                    assertThat(context).hasFailed();
+                    assertThat(lazyBeanInstantiated).isFalse();
+                    assertThat(context.getStartupFailure())
+                            .isInstanceOf(IllegalStateException.class)
+                            .hasMessageContaining("Missing scheduled audit schedulerId")
+                            .hasMessageContaining("lazyPlainScheduledBean:")
+                            .hasMessageContaining("LazyPlainScheduledBean.run");
                 });
     }
 
@@ -311,6 +379,20 @@ class ScheduledAuditAutoConfigurationTest {
 
         @Scheduled(fixedRate = 1000)
         @ScheduledAudit(schedulerId = "ACCOUNT_CLEANUP")
+        void run() {
+        }
+    }
+
+    static final class PlainScheduledBean {
+
+        @Scheduled(fixedRate = 1000)
+        void run() {
+        }
+    }
+
+    static final class LazyPlainScheduledBean {
+
+        @Scheduled(fixedRate = 1000)
         void run() {
         }
     }

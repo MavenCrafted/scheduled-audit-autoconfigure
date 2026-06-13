@@ -6,6 +6,9 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Added `scheduled-audit.scheduler-id-policy=required` to fail startup unless
+  every Spring `@Scheduled` method declares `@ScheduledAudit(schedulerId = "...")`.
+
 ### Changed
 
 ### Fixed

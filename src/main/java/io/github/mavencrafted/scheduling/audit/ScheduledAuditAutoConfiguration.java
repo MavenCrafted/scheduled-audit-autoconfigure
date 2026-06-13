@@ -39,12 +39,13 @@ public final class ScheduledAuditAutoConfiguration {
      * Registers the startup validator for unique scheduled audit scheduler identifiers.
      *
      * @param beanFactory the bean factory used to inspect scheduled beans
+     * @param scheduledAuditProperties the scheduled audit configuration properties
      * @return the scheduler identifier validator
      */
     @Bean
     @ConditionalOnMissingBean(ScheduledAuditSchedulerIdValidator.class)
-    ScheduledAuditSchedulerIdValidator scheduledAuditSchedulerIdValidator(ListableBeanFactory beanFactory) {
-        return new ScheduledAuditSchedulerIdValidator(beanFactory);
+    ScheduledAuditSchedulerIdValidator scheduledAuditSchedulerIdValidator(ListableBeanFactory beanFactory, ScheduledAuditProperties scheduledAuditProperties) {
+        return new ScheduledAuditSchedulerIdValidator(beanFactory, scheduledAuditProperties.getSchedulerIdPolicy());
     }
 
     /**
