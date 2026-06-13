@@ -22,6 +22,11 @@ public class ScheduledAuditProperties {
     private Scope scope = Scope.ALL;
 
     /**
+     * Whether scheduler identifiers are optional or required for scheduled methods.
+     */
+    private SchedulerIdPolicy schedulerIdPolicy = SchedulerIdPolicy.OPTIONAL;
+
+    /**
      * Logging configuration for the default scheduled audit listener.
      */
     private final Logging logging = new Logging();
@@ -65,6 +70,26 @@ public class ScheduledAuditProperties {
      */
     public void setScope(Scope scope) {
         this.scope = (scope != null ? scope : Scope.ALL);
+    }
+
+    /**
+     * Returns whether scheduler identifiers are optional or required for scheduled methods.
+     *
+     * @return the configured scheduler identifier policy
+     */
+    public SchedulerIdPolicy getSchedulerIdPolicy() {
+        return this.schedulerIdPolicy;
+    }
+
+    /**
+     * Sets the scheduler identifier validation policy.
+     *
+     * <p>When set to {@code null}, the policy falls back to {@link SchedulerIdPolicy#OPTIONAL}.
+     *
+     * @param schedulerIdPolicy the scheduler identifier validation policy
+     */
+    public void setSchedulerIdPolicy(SchedulerIdPolicy schedulerIdPolicy) {
+        this.schedulerIdPolicy = (schedulerIdPolicy != null ? schedulerIdPolicy : SchedulerIdPolicy.OPTIONAL);
     }
 
     /**
@@ -224,5 +249,19 @@ public class ScheduledAuditProperties {
          * Audit only Spring {@code @Scheduled} methods that also declare {@link ScheduledAudit}.
          */
         ANNOTATED
+    }
+
+    /**
+     * Defines whether scheduler identifiers are optional or required for scheduled methods.
+     */
+    public enum SchedulerIdPolicy {
+        /**
+         * Allows scheduled methods without {@link ScheduledAudit}; events for those methods have no scheduler ID.
+         */
+        OPTIONAL,
+        /**
+         * Requires every Spring {@code @Scheduled} method to declare {@link ScheduledAudit#schedulerId()}.
+         */
+        REQUIRED
     }
 }

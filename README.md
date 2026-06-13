@@ -128,6 +128,14 @@ Rules:
 - Blank values fail application startup
 - Startup fails when duplicate IDs are detected
 
+By default, Spring `@Scheduled` methods without `@ScheduledAudit` are allowed and emit events without a
+`schedulerId`. To require every scheduled method to declare a scheduler ID, use:
+
+```yaml
+scheduled-audit:
+  scheduler-id-policy: required
+```
+
 Good:
 
 ```java
@@ -345,6 +353,7 @@ The library never swallows application exceptions.
 scheduled-audit:
   enabled: true
   scope: all
+  scheduler-id-policy: optional
   logging:
     enabled: true
     include-stacktrace: false
@@ -358,6 +367,7 @@ scheduled-audit:
 | --- | --- | --- |
 | `scheduled-audit.enabled` | `true` | Enables scheduled audit auto-configuration. |
 | `scheduled-audit.scope` | `all` | Controls which scheduled methods emit audit events. Use `all` to audit every Spring `@Scheduled` method, or `annotated` to audit only methods that also declare `@ScheduledAudit`. |
+| `scheduled-audit.scheduler-id-policy` | `optional` | Controls whether plain Spring `@Scheduled` methods may omit `@ScheduledAudit`. Use `optional` to allow events without a scheduler ID, or `required` to fail startup unless every scheduled method declares `@ScheduledAudit(schedulerId = "...")`. |
 | `scheduled-audit.logging.enabled` | `true` | Enables the default logging listener. |
 | `scheduled-audit.logging.include-stacktrace` | `false` | Includes the thrown exception stack trace for failed scheduled executions. |
 | `scheduled-audit.logging.include-tags` | empty | Logs only events with at least one matching tag when configured. |
