@@ -8,6 +8,12 @@ All notable changes to this project will be documented in this file.
 
 - Added `scheduled-audit.scheduler-id-policy=required` to fail startup unless
   every Spring `@Scheduled` method declares `@ScheduledAudit(schedulerId = "...")`.
+- Added release supply-chain security controls:
+  - CycloneDX SBOM generation for release artifacts
+  - GitHub artifact provenance attestations for published JAR and SBOM files
+  - Dependency review for pull requests
+  - GitHub Actions pinned to immutable commit SHAs
+  - Reproducible build timestamp configuration
 
 ### Changed
 
