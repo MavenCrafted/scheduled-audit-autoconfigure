@@ -23,6 +23,12 @@ import java.util.List;
 public final class ScheduledAuditAutoConfiguration {
 
     /**
+     * Creates scheduled audit auto-configuration.
+     */
+    public ScheduledAuditAutoConfiguration() {
+    }
+
+    /**
      * Registers the scheduled audit aspect.
      *
      * @param listeners the listeners that receive audit events
@@ -68,8 +74,8 @@ public final class ScheduledAuditAutoConfiguration {
     }
 
     /**
-    * Configuration for publishing scheduled audit metrics when Micrometer is available.
-    */
+     * Configuration for publishing scheduled audit metrics when Micrometer is available.
+     */
     @ConditionalOnClass(MeterRegistry.class)
     static class MicrometerConfiguration {
 

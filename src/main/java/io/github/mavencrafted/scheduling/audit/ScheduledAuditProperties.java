@@ -37,6 +37,12 @@ public class ScheduledAuditProperties {
     private final Metrics metrics = new Metrics();
 
     /**
+     * Creates scheduled audit properties with default values.
+     */
+    public ScheduledAuditProperties() {
+    }
+
+    /**
      * Returns whether scheduled audit support is enabled.
      *
      * @return {@code true} when scheduled audit support is enabled
@@ -136,6 +142,12 @@ public class ScheduledAuditProperties {
         private Set<String> excludeTags = new LinkedHashSet<>();
 
         /**
+         * Creates logging properties with default values.
+         */
+        public Logging() {
+        }
+
+        /**
          * Returns whether the default logging listener is enabled.
          *
          * @return {@code true} when the default logging listener is enabled
@@ -217,6 +229,12 @@ public class ScheduledAuditProperties {
          * Whether the Micrometer metrics listener is enabled.
          */
         private boolean enabled = false;
+
+        /**
+         * Creates metrics properties with default values.
+         */
+        public Metrics() {
+        }
 
         /**
          * Returns whether the Micrometer metrics listener is enabled.
