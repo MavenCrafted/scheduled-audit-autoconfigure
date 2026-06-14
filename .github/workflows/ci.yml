@@ -13,8 +13,12 @@ permissions:
 
 jobs:
   test:
-    name: Test
+    name: Test (Java ${{ matrix.java-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java-version: ['17', '21', '25']
     steps:
       - name: Check out source
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
@@ -23,7 +27,7 @@ jobs:
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: ${{ matrix.java-version }}
           cache: maven
 
       - name: Run tests and install local artifact
@@ -32,7 +36,7 @@ jobs:
       - name: Upload CycloneDX SBOM
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: cyclonedx-sbom
+          name: cyclonedx-sbom-java-${{ matrix.java-version }}
           path: |
             target/*-cyclonedx.json
             target/*-cyclonedx.xml
