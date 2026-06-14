@@ -152,6 +152,32 @@ schedulerId = "task"
 schedulerId = "scheduled-task"
 ```
 
+## Production Usage
+
+For production platforms, start from this conservative baseline:
+
+```yaml
+scheduled-audit:
+  scope: annotated
+  scheduler-id-policy: required
+  logging:
+    enabled: false
+  metrics:
+    enabled: true
+```
+
+This mode gives you:
+
+- Events only for jobs that explicitly declare `@ScheduledAudit`
+- Startup failure when a Spring `@Scheduled` method lacks `@ScheduledAudit(schedulerId = "...")`
+- Startup validation that scheduler IDs are non-blank and unique
+- No default audit logs; events should be handled by an explicit `ScheduledAuditListener`
+- Terminal execution metrics when a `MeterRegistry` is available
+
+Use a custom `ScheduledAuditListener` to forward events to an approved audit, monitoring, or messaging system. This library does not provide durable audit storage or compliance controls, and failed-job messages may contain sensitive data.
+
+Release artifacts include source and Javadoc jars. Releases also generate CycloneDX SBOM files and GitHub artifact provenance attestations for published JAR and SBOM artifacts.
+
 ## How It Works
 
 ```mermaid
