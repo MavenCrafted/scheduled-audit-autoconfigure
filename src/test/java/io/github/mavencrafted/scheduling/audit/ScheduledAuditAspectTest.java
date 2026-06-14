@@ -1,18 +1,14 @@
 package io.github.mavencrafted.scheduling.audit;
 
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.reflect.MethodSignature;
 import org.junit.jupiter.api.Test;
+import org.springframework.aop.aspectj.annotation.AspectJProxyFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 class ScheduledAuditAspectTest {
 
@@ -20,9 +16,9 @@ class ScheduledAuditAspectTest {
     void publishesStartedAndSucceededEvents() throws Throwable {
         List<ScheduledAuditEvent> events = new ArrayList<>();
         ScheduledAuditAspect aspect = new ScheduledAuditAspect(List.of(events::add));
-        Method method = scheduledMethod();
+        SampleScheduledBean bean = auditedBean(aspect);
 
-        Object result = aspect.audit(joinPoint(method, "done"), scheduled(method));
+        Object result = bean.run();
 
         assertThat(result).isEqualTo("done");
         assertThat(events).hasSize(2);
@@ -42,10 +38,10 @@ class ScheduledAuditAspectTest {
     void publishesFailedEvent() throws Throwable {
         List<ScheduledAuditEvent> events = new ArrayList<>();
         ScheduledAuditAspect aspect = new ScheduledAuditAspect(List.of(events::add));
-        Method method = scheduledMethod();
-        IllegalStateException failure = new IllegalStateException("boom");
+        SampleScheduledBean bean = auditedBean(aspect);
+        IllegalStateException failure = bean.failure();
 
-        assertThatThrownBy(() -> aspect.audit(joinPoint(method, failure), scheduled(method)))
+        assertThatThrownBy(bean::fail)
                 .isSameAs(failure);
 
         assertThat(events).hasSize(2);
@@ -59,9 +55,9 @@ class ScheduledAuditAspectTest {
     void publishesEmptyTagsWhenAnnotationIsAbsent() throws Throwable {
         List<ScheduledAuditEvent> events = new ArrayList<>();
         ScheduledAuditAspect aspect = new ScheduledAuditAspect(List.of(events::add));
-        Method method = plainScheduledMethod();
+        SampleScheduledBean bean = auditedBean(aspect);
 
-        Object result = aspect.audit(joinPoint(method, "done"), scheduled(method));
+        Object result = bean.runWithoutAudit();
 
         assertThat(result).isEqualTo("done");
         assertThat(events).hasSize(2);
@@ -78,9 +74,9 @@ class ScheduledAuditAspectTest {
                 List.of(events::add),
                 ScheduledAuditProperties.Scope.ANNOTATED
         );
-        Method method = plainScheduledMethod();
+        SampleScheduledBean bean = auditedBean(aspect);
 
-        Object result = aspect.audit(joinPoint(method, "done"), scheduled(method));
+        Object result = bean.runWithoutAudit();
 
         assertThat(result).isEqualTo("done");
         assertThat(events).isEmpty();
@@ -93,9 +89,9 @@ class ScheduledAuditAspectTest {
                 List.of(events::add),
                 ScheduledAuditProperties.Scope.ANNOTATED
         );
-        Method method = scheduledMethod();
+        SampleScheduledBean bean = auditedBean(aspect);
 
-        Object result = aspect.audit(joinPoint(method, "done"), scheduled(method));
+        Object result = bean.run();
 
         assertThat(result).isEqualTo("done");
         assertThat(events)
@@ -109,9 +105,9 @@ class ScheduledAuditAspectTest {
         ScheduledAuditAspect aspect = new ScheduledAuditAspect(List.of(event -> {
             throw new IllegalStateException("listener failed");
         }));
-        Method method = scheduledMethod();
+        SampleScheduledBean bean = auditedBean(aspect);
 
-        Object result = aspect.audit(joinPoint(method, "done"), scheduled(method));
+        Object result = bean.run();
 
         assertThat(result).isEqualTo("done");
     }
@@ -122,9 +118,8 @@ class ScheduledAuditAspectTest {
         List<ScheduledAuditEvent> secondEvents = new ArrayList<>();
         List<ScheduledAuditListener> listeners = List.of(firstEvents::add, secondEvents::add);
         ScheduledAuditAspect aspect = new ScheduledAuditAspect(listeners);
-        Method method = scheduledMethod();
 
-        Object result = aspect.audit(joinPoint(method, "done"), scheduled(method));
+        Object result = auditedBean(aspect).run();
 
         assertThat(result).isEqualTo("done");
         assertThat(firstEvents)
@@ -144,9 +139,8 @@ class ScheduledAuditAspectTest {
             throw new IllegalStateException("listener failed");
         };
         ScheduledAuditAspect aspect = new ScheduledAuditAspect(List.of(failingListener, events::add));
-        Method method = scheduledMethod();
 
-        Object result = aspect.audit(joinPoint(method, "done"), scheduled(method));
+        Object result = auditedBean(aspect).run();
 
         assertThat(result).isEqualTo("done");
         assertThat(events)
@@ -154,37 +148,15 @@ class ScheduledAuditAspectTest {
                 .containsExactly(ScheduledAuditEvent.Status.STARTED, ScheduledAuditEvent.Status.SUCCEEDED);
     }
 
-    private ProceedingJoinPoint joinPoint(Method method, Object result) throws Throwable {
-        ProceedingJoinPoint joinPoint = mock(ProceedingJoinPoint.class);
-        MethodSignature signature = mock(MethodSignature.class);
-
-        when(joinPoint.getSignature()).thenReturn(signature);
-        when(joinPoint.getTarget()).thenReturn(new SampleScheduledBean());
-        when(signature.getMethod()).thenReturn(method);
-
-        if (result instanceof Throwable throwable) {
-            when(joinPoint.proceed()).thenThrow(throwable);
-        }
-        else {
-            when(joinPoint.proceed()).thenReturn(result);
-        }
-
-        return joinPoint;
+    private SampleScheduledBean auditedBean(ScheduledAuditAspect aspect) {
+        AspectJProxyFactory proxyFactory = new AspectJProxyFactory(new SampleScheduledBean());
+        proxyFactory.addAspect(aspect);
+        return proxyFactory.getProxy();
     }
 
-    private Method scheduledMethod() throws NoSuchMethodException {
-        return SampleScheduledBean.class.getMethod("run");
-    }
+    static class SampleScheduledBean {
 
-    private Method plainScheduledMethod() throws NoSuchMethodException {
-        return SampleScheduledBean.class.getMethod("runWithoutAudit");
-    }
-
-    private Scheduled scheduled(Method method) {
-        return method.getAnnotation(Scheduled.class);
-    }
-
-    static final class SampleScheduledBean {
+        private final IllegalStateException failure = new IllegalStateException("boom");
 
         @Scheduled(fixedRate = 5000)
         @ScheduledAudit(schedulerId = "ACCOUNT_CLEANUP", tags = {"billing", "noisy"})
@@ -195,6 +167,15 @@ class ScheduledAuditAspectTest {
         @Scheduled(fixedRate = 5000)
         public String runWithoutAudit() {
             return "done";
+        }
+
+        @Scheduled(fixedRate = 5000)
+        public void fail() {
+            throw this.failure;
+        }
+
+        IllegalStateException failure() {
+            return this.failure;
         }
     }
 }
