@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [2.3.0] - 2026-06-15
+## [2.3.1] - 2026-06-15
 
 ### Added
 
@@ -27,8 +27,6 @@ All notable changes to this project will be documented in this file.
 - Removed Mockito from the test dependency graph.
 - CI now tests and builds on Java 17, 21, and 25.
 - CI now compiles the example application.
-
-### Fixed
 
 ## [2.2.1] - 2026-06-10
 

@@ -32,9 +32,9 @@ It allows applications to:
 
 | Library version | Spring Boot version | Java version | Status |
 | --- | --- | --- | --- |
-| `2.3.0` | `3.x` | `17+` (tested on `17`, `21`, and `25`) | Supported and tested |
-| `2.3.0` | `2.x` | Not applicable | Unsupported |
-| `2.3.0` | `4.x` | Not tested | Not officially supported |
+| `2.3.1` | `3.x` | `17+` (tested on `17`, `21`, and `25`) | Supported and tested |
+| `2.3.1` | `2.x` | Not applicable | Unsupported |
+| `2.3.1` | `4.x` | Not tested | Not officially supported |
 
 Library version `1.x` is no longer supported.
 
@@ -46,7 +46,7 @@ Maven:
 <dependency>
     <groupId>io.github.mavencrafted</groupId>
     <artifactId>scheduled-audit-autoconfigure</artifactId>
-    <version>2.3.0</version>
+    <version>2.3.1</version>
 </dependency>
 
 <dependency>
@@ -58,7 +58,7 @@ Maven:
 Gradle:
 
 ```groovy
-implementation "io.github.mavencrafted:scheduled-audit-autoconfigure:2.3.0"
+implementation "io.github.mavencrafted:scheduled-audit-autoconfigure:2.3.1"
 implementation "org.springframework.boot:spring-boot-starter-aop"
 ```
 
