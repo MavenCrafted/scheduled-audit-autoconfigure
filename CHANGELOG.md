@@ -28,8 +28,6 @@ All notable changes to this project will be documented in this file.
 - CI now tests and builds on Java 17, 21, and 25.
 - CI now compiles the example application.
 
-### Fixed
-
 ## [2.2.1] - 2026-06-10
 
 ### Fixed
