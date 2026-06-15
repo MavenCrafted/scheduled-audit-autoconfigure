@@ -4,10 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-06-15
+
 ### Added
 
 - Added `scheduled-audit.scheduler-id-policy=required` to fail startup unless
   every Spring `@Scheduled` method declares `@ScheduledAudit(schedulerId = "...")`.
+- Added a runnable scheduled audit demo application under `examples/scheduled-audit-demo`.
+- Added support policy documentation.
+- Added production usage guidance, compatibility information, and a scheduling flowchart to the README.
 - Added release supply-chain security controls:
   - CycloneDX SBOM generation for release artifacts
   - GitHub artifact provenance attestations for published JAR and SBOM files
@@ -16,6 +21,12 @@ All notable changes to this project will be documented in this file.
   - Reproducible build timestamp configuration
 
 ### Changed
+
+- Updated Spring Boot dependency management to 3.5.15.
+- Updated Maven Failsafe Plugin to 3.5.6.
+- Removed Mockito from the test dependency graph.
+- CI now tests and builds on Java 17, 21, and 25.
+- CI now compiles the example application.
 
 ### Fixed
 
