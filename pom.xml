@@ -7,7 +7,7 @@
 
     <groupId>io.github.mavencrafted</groupId>
     <artifactId>scheduled-audit-autoconfigure</artifactId>
-    <version>2.2.1</version>
+    <version>2.3.0</version>
     <packaging>jar</packaging>
 
     <name>scheduled-audit-autoconfigure</name>
@@ -50,7 +50,7 @@
         <central-publishing-maven-plugin.version>0.10.0</central-publishing-maven-plugin.version>
         <cyclonedx-maven-plugin.version>2.9.1</cyclonedx-maven-plugin.version>
         <spring-boot.version>3.5.15</spring-boot.version>
-        <project.build.outputTimestamp>2026-06-10T00:00:00Z</project.build.outputTimestamp>
+        <project.build.outputTimestamp>2026-06-15T00:00:00Z</project.build.outputTimestamp>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
