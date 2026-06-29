@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [2.3.2] - 2026-06-29
+
+### Changed
+
+- Updated Spring Boot dependency management and the demo application parent to 3.5.16.
+- Updated GitHub Actions workflow dependencies, including `actions/checkout` and `actions/setup-java`.
+- Updated release tooling, including the CycloneDX Maven Plugin and Maven Central Publishing Plugin.
+
 ## [2.3.1] - 2026-06-15
 
 ### Added
