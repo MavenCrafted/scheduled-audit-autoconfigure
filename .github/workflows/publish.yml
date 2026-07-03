@@ -36,7 +36,7 @@ jobs:
           MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
 
       - name: Attest Maven Central artifacts
-        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        uses: actions/attest@v4.1.1 # Pin to the v4.1.1 commit SHA
         with:
           subject-path: |
             target/*.jar
@@ -74,9 +74,10 @@ jobs:
           MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
 
       - name: Attest GitHub Packages artifacts
-        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        uses: actions/attest@v4.1.1 # Pin to the v4.1.1 commit SHA
         with:
           subject-path: |
             target/*.jar
             target/*-cyclonedx.json
             target/*-cyclonedx.xml
+ 
