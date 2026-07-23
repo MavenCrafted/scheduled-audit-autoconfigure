@@ -36,7 +36,7 @@ jobs:
           MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
 
       - name: Attest Maven Central artifacts
-        uses: actions/attest@v4.1.1 # Pin to the v4.1.1 commit SHA
+        uses: actions/attest@v4.2.0 # Pin to the v4.1.1 commit SHA
         with:
           subject-path: |
             target/*.jar
@@ -74,7 +74,7 @@ jobs:
           MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
 
       - name: Attest GitHub Packages artifacts
-        uses: actions/attest@v4.1.1 # Pin to the v4.1.1 commit SHA
+        uses: actions/attest@v4.2.0 # Pin to the v4.1.1 commit SHA
         with:
           subject-path: |
             target/*.jar
